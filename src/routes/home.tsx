@@ -9,9 +9,5 @@ const Wrapper = styled.div`
 `;
 
 export default function Home() {
-  return (
-    <Wrapper>
-      <h1>home</h1>
-    </Wrapper>
-  );
+  return <Wrapper></Wrapper>;
 }

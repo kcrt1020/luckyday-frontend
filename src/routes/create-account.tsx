@@ -1,73 +1,82 @@
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useState } from "react";
-import { auth } from "../firebase";
 import { Link, useNavigate } from "react-router-dom";
-import { FirebaseError } from "firebase/app";
 import {
-  Error,
+  ErrorMessage,
   Form,
   Input,
   Switcher,
   Title,
   Wrapper,
 } from "../components/auth-components";
-import GithubButton from "../components/github-btn";
 
 export default function CreateAccount() {
   const navigate = useNavigate();
   const [isLoading, setLoading] = useState(false);
-  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const {
-      target: { name, value },
-    } = e;
-    if (name === "name") {
-      setName(value);
+    const { name, value } = e.target;
+    if (name === "username") {
+      setUsername(value);
     } else if (name === "email") {
       setEmail(value);
     } else if (name === "password") {
       setPassword(value);
     }
   };
+
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
-    if (isLoading || name === "" || email === "" || password === "") return;
+    if (isLoading || username === "" || email === "" || password === "") return;
+
+    setLoading(true);
+
     try {
-      setLoading(true);
-      const credentials = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      await updateProfile(credentials.user, {
-        displayName: name,
+      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8081";
+      const response = await fetch(`${API_URL}/api/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include", // ✅ 추가
+        body: JSON.stringify({ username, email, password }),
       });
-      navigate("/");
-    } catch (e) {
-      if (e instanceof FirebaseError) {
-        console.log(e.code, e.message);
-        setError(e.message);
-      } else {
-        console.error("Unexpected Error:", e); // 예상치 못한 에러 처리
-        setError("Unexpected error occurred. Please try again.");
+
+      let data;
+      try {
+        data =
+          response.headers.get("content-length") !== "0"
+            ? await response.json()
+            : {};
+      } catch {
+        data = {};
       }
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to create account");
+      }
+
+      navigate("/login");
+    } catch (e) {
+      console.error("Error:", e);
+      setError((e as Error).message);
     } finally {
       setLoading(false);
     }
-    console.log(name, email, password);
   };
+
   return (
     <Wrapper>
-      <Title>Join X</Title>
+      <Title>Join LUCKY DAY</Title>
       <Form onSubmit={onSubmit}>
         <Input
           onChange={onChange}
-          name="name"
-          value={name}
+          name="username"
+          value={username}
           placeholder="Name"
           type="text"
           required
@@ -85,6 +94,7 @@ export default function CreateAccount() {
           name="password"
           value={password}
           placeholder="Password"
+          type="password"
           required
         />
         <Input
@@ -92,11 +102,10 @@ export default function CreateAccount() {
           value={isLoading ? "Loading..." : "Create Account"}
         />
       </Form>
-      {error !== "" ? <Error>{error}</Error> : null}
+      {error !== "" ? <ErrorMessage>{error}</ErrorMessage> : null}
       <Switcher>
         Already have an account? <Link to={"/login"}>Log in &rarr;</Link>
       </Switcher>
-      <GithubButton />
     </Wrapper>
   );
 }

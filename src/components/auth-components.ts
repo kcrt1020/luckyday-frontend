@@ -36,7 +36,7 @@ export const Input = styled.input`
   }
 `;
 
-export const Error = styled.span`
+export const ErrorMessage = styled.span`
   font-weight: 600;
   color: tomato;
 `;

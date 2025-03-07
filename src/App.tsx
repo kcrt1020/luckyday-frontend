@@ -6,6 +6,8 @@ import LoadingScreen from "./components/loading-screen";
 import Home from "./routes/home";
 import ProtectedRoute from "./routes/protected-route";
 import Layout from "./components/layout";
+import styled from "styled-components";
+import CreateAccount from "./routes/create-account";
 
 const router = createBrowserRouter([
   {
@@ -26,10 +28,19 @@ const router = createBrowserRouter([
     path: "/login",
     element: <Login />,
   },
+  {
+    path: "/create-account",
+    element: <CreateAccount />,
+  },
 ]);
 
+const Wrapper = styled.div`
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+`;
+
 function App() {
-  const [count, setCount] = useState(0);
   const [isLoading, setLoading] = useState(true);
   const init = async () => {
     setLoading(false);
@@ -39,9 +50,9 @@ function App() {
   }, []);
 
   return (
-    <>
-      <h1>Lucky Day</h1>
-      <div className="card">
+    <Wrapper>
+      {/* <h1>Lucky Day</h1> */}
+      {/* <div className="card">
         <button onClick={() => setCount((count) => count + 1)}>
           count is {count}
         </button>
@@ -51,9 +62,9 @@ function App() {
       </div>
       <p className="read-the-docs">
         Click on the Vite and React logos to learn more
-      </p>
+      </p> */}
       {isLoading ? <LoadingScreen /> : <RouterProvider router={router} />}
-    </>
+    </Wrapper>
   );
 }
 
