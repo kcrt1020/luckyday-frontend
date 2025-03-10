@@ -1,8 +1,5 @@
 import styled from "styled-components";
 import { ITweet } from "./timeline";
-import { auth, db, storage } from "../firebase";
-import { deleteDoc, doc } from "firebase/firestore";
-import { deleteObject, ref } from "firebase/storage";
 
 const Wrapper = styled.div`
   display: grid;
@@ -38,30 +35,13 @@ const DeleteButton = styled.button`
   cursor: pointer;
 `;
 
-export default function Tweet({ username, photo, tweet, userId, id }: ITweet) {
-  const user = auth.currentUser;
-  const onDelete = async () => {
-    const ok = confirm("트윗을 삭제하시겠습니까?");
-    if (!ok || user?.uid !== userId) return;
-    try {
-      await deleteDoc(doc(db, "tweets", id));
-      if (photo) {
-        const photoRef = ref(storage, `tweets/${user.uid}/${id}`);
-        await deleteObject(photoRef);
-      }
-    } catch (e) {
-      console.log(e);
-    } finally {
-    }
-  };
+export default function Tweet({ username, photo, tweet }: ITweet) {
   return (
     <Wrapper>
       <Column>
         <Username>{username}</Username>
         <Payload>{tweet}</Payload>
-        {user?.uid === userId ? (
-          <DeleteButton onClick={onDelete}>Delete</DeleteButton>
-        ) : null}
+        <DeleteButton>Delete</DeleteButton>
       </Column>
       <Column>{photo ? <Photo src={photo} /> : null}</Column>
     </Wrapper>

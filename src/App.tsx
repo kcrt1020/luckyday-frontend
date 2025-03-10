@@ -6,7 +6,8 @@ import LoadingScreen from "./components/loading-screen";
 import Home from "./routes/home";
 import ProtectedRoute from "./routes/protected-route";
 import Layout from "./components/layout";
-import styled from "styled-components";
+import reset from "styled-reset";
+import styled, { createGlobalStyle } from "styled-components";
 import CreateAccount from "./routes/create-account";
 
 const router = createBrowserRouter([
@@ -34,6 +35,21 @@ const router = createBrowserRouter([
   },
 ]);
 
+const GlobalStyles = createGlobalStyle`
+  ${reset};
+  *{
+    box-sizing: border-box;
+  }
+  body {
+    background-color: black;
+    color: white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  ::-webkit-scrollbar {
+    display:none;
+    }
+`;
+
 const Wrapper = styled.div`
   height: 100vh;
   display: flex;
@@ -51,18 +67,7 @@ function App() {
 
   return (
     <Wrapper>
-      {/* <h1>Lucky Day</h1> */}
-      {/* <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p> */}
+      <GlobalStyles />
       {isLoading ? <LoadingScreen /> : <RouterProvider router={router} />}
     </Wrapper>
   );

@@ -33,7 +33,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8081"; // ✅ 내부에서 8080 사용
+      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8081";
 
       // const API_URL = "http://172.20.0.3:8080";
       // const API_URL = "http://localhost:8081";
