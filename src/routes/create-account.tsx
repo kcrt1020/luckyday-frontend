@@ -36,7 +36,7 @@ export default function CreateAccount() {
     setLoading(true);
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8081";
+      const API_URL = import.meta.env.VITE_API_URL;
       const response = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: {

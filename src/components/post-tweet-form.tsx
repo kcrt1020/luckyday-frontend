@@ -5,6 +5,7 @@ const Form = styled.form`
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-width: 600px;
 `;
 
 const TextArea = styled.textarea`
@@ -58,6 +59,8 @@ export default function PostTweetForm() {
   const [tweet, setTweet] = useState("");
   const [file, setFile] = useState<File | null>(null);
 
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8081";
+
   const onChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setTweet(e.target.value);
   };
@@ -74,27 +77,58 @@ export default function PostTweetForm() {
     if (isLoading || tweet === "" || tweet.length > 180) return;
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8081";
       setLoading(true);
+
       const formData = new FormData();
-      formData.append("content", tweet);
-      formData.append("userId", "12345"); // 테스트용 (유저 ID)
-      formData.append("username", "Test User");
+      const tweetData = JSON.stringify({ content: tweet });
+      formData.append(
+        "content",
+        new Blob([tweetData], { type: "application/json" })
+      );
+
       if (file) {
-        formData.append("image", file);
+        formData.append("file", file);
       }
+
+      // ✅ JWT 토큰 가져오기
+      const token = localStorage.getItem("jwt");
+      if (!token) {
+        console.error("🚨 JWT 토큰 없음 - 로그인 필요");
+        alert("로그인이 필요합니다.");
+        return;
+      }
+      console.log("📤 token : " + token);
 
       const response = await fetch(`${API_URL}/api/tweets`, {
         method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`, // ✅ 올바른 템플릿 리터럴 사용
+        },
         body: formData,
       });
 
-      if (response.ok) {
-        setTweet("");
-        setFile(null);
+      console.log("📩 [트윗 작성 요청] 서버 응답 상태 코드:", response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("❌ [트윗 작성 요청] 서버 응답 오류:", errorData);
+        throw new Error(
+          `트윗 작성 실패: ${response.status} - ${
+            errorData.message || "알 수 없는 오류"
+          }`
+        );
       }
+
+      const responseData = await response.json();
+      console.log("✅ [트윗 작성 성공] 서버 응답 데이터:", responseData);
+
+      setTweet("");
+      setFile(null);
+
+      // ✅ 트윗이 등록되면 페이지 새로고침
+      window.location.reload();
     } catch (error) {
-      console.error("Error posting tweet:", error);
+      console.error("❌ [트윗 작성 오류]", error);
     } finally {
       setLoading(false);
     }

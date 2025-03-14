@@ -4,11 +4,11 @@ import Tweet from "./tweet";
 
 export interface ITweet {
   id: string;
-  photo?: string;
-  tweet: string;
+  content: string;
+  imageUrl?: string;
   userId: string;
   username: string;
-  createdAt: number;
+  createdAt: string;
 }
 
 const Wrapper = styled.div`
@@ -18,46 +18,31 @@ const Wrapper = styled.div`
 `;
 
 export default function Timeline() {
-  const [tweets, setTweet] = useState<ITweet[]>([]);
-  // useEffect(() => {
-  //   const fetchTweets = async () => {
-  //     // const tweetsQuery = query(
-  //     //   collection(db, "tweets"),
-  //     //   orderBy("createdAt", "desc"),
-  //     //   limit(25)
-  //     // );
-  //     // const spanshot = await getDocs(tweetsQuery);
-  //     // const tweets = spanshot.docs.map((doc) => {
-  //     //   const { tweet, createdAt, userId, username, photo } = doc.data();
-  //     //   return {
-  //     //     tweet,
-  //     //     createdAt,
-  //     //     userId,
-  //     //     username,
-  //     //     photo,
-  //     //     id: doc.id,
-  //     //   };
-  //     // });
-  //     unsubscribe = await onSnapshot(tweetsQuery, (snapshot) => {
-  //       const tweets = snapshot.docs.map((doc) => {
-  //         const { tweet, createdAt, userId, username, photo } = doc.data();
-  //         return {
-  //           tweet,
-  //           createdAt,
-  //           userId,
-  //           username,
-  //           photo,
-  //           id: doc.id,
-  //         };
-  //       });
-  //       setTweet(tweets);
-  //     });
-  //   };
-  //   fetchTweets();
-  //   return () => {
-  //     unsubscribe && unsubscribe();
-  //   };
-  // }, []);
+  const [tweets, setTweets] = useState<ITweet[]>([]);
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8081";
+
+  // ✅ 트윗 목록을 가져오는 함수
+  const fetchTweets = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/tweets`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch tweets");
+      }
+      const data: ITweet[] = await response.json();
+      setTweets(data);
+    } catch (error) {
+      console.error("Error fetching tweets:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchTweets(); // ✅ 최초 실행 시 트윗 가져오기
+
+    // ✅ 일정 간격(5초)마다 최신 트윗 가져오기
+    const interval = setInterval(fetchTweets, 5000);
+
+    return () => clearInterval(interval); // 컴포넌트 언마운트 시 인터벌 제거
+  }, []);
 
   return (
     <Wrapper>
