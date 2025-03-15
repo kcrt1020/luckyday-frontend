@@ -19,36 +19,53 @@ const Wrapper = styled.div`
 
 export default function Timeline() {
   const [tweets, setTweets] = useState<ITweet[]>([]);
-
-  // ✅ 트윗 목록을 가져오는 함수
-  const fetchTweets = async () => {
-    try {
-      const API_URL = import.meta.env.VITE_API_URL;
-      const response = await fetch(`${API_URL}/api/tweets`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch tweets");
-      }
-      const data: ITweet[] = await response.json();
-      setTweets(data);
-    } catch (error) {
-      console.error("Error fetching tweets:", error);
-    }
-  };
+  const [isReady, setIsReady] = useState(false); // ✅ fetchWithAuth가 준비될 때까지 대기
 
   useEffect(() => {
-    fetchTweets(); // ✅ 최초 실행 시 트윗 가져오기
+    const checkFetchWithAuth = setInterval(() => {
+      if (typeof window.fetchWithAuth === "function") {
+        console.log("✅ fetchWithAuth가 정상적으로 설정됨!");
+        setIsReady(true);
+        clearInterval(checkFetchWithAuth); // ✅ fetchWithAuth가 설정되면 setInterval 종료
+      }
+    }, 100); // ✅ 100ms마다 fetchWithAuth가 설정되었는지 확인
 
-    // ✅ 일정 간격(5초)마다 최신 트윗 가져오기
-    const interval = setInterval(fetchTweets, 5000);
-
-    return () => clearInterval(interval); // 컴포넌트 언마운트 시 인터벌 제거
+    return () => clearInterval(checkFetchWithAuth);
   }, []);
+
+  useEffect(() => {
+    if (!isReady) return; // ✅ fetchWithAuth가 준비될 때까지 API 요청을 보내지 않음
+
+    const API_URL = import.meta.env.VITE_API_URL;
+
+    const loadTweets = async () => {
+      try {
+        const response = await window.fetchWithAuth(`${API_URL}/api/tweets`);
+
+        if (!response.ok) {
+          throw new Error(`🚨 API 응답 실패: ${response.status}`);
+        }
+
+        const data: ITweet[] = await response.json();
+        setTweets(data);
+      } catch (error) {
+        console.error("🚨 트윗 가져오기 실패:", error);
+      }
+    };
+
+    loadTweets();
+    const interval = setInterval(loadTweets, 5000);
+
+    return () => clearInterval(interval);
+  }, [isReady]); // ✅ isReady가 true가 된 후 API 요청 시작
 
   return (
     <Wrapper>
-      {tweets.map((tweet) => (
-        <Tweet key={tweet.id} {...tweet} />
-      ))}
+      {tweets.length > 0 ? (
+        tweets.map((tweet) => <Tweet key={tweet.id} {...tweet} />)
+      ) : (
+        <p>트윗이 없습니다.</p>
+      )}
     </Wrapper>
   );
 }

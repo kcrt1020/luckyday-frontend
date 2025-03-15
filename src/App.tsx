@@ -47,7 +47,7 @@ const GlobalStyles = createGlobalStyle`
   }
   ::-webkit-scrollbar {
     display:none;
-    }
+  }
 `;
 
 const Wrapper = styled.div`
@@ -61,6 +61,7 @@ function App() {
   const init = async () => {
     setLoading(false);
   };
+
   useEffect(() => {
     init();
   }, []);
