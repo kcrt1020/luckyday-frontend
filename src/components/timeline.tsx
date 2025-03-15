@@ -19,11 +19,11 @@ const Wrapper = styled.div`
 
 export default function Timeline() {
   const [tweets, setTweets] = useState<ITweet[]>([]);
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8081";
 
   // ✅ 트윗 목록을 가져오는 함수
   const fetchTweets = async () => {
     try {
+      const API_URL = import.meta.env.VITE_API_URL;
       const response = await fetch(`${API_URL}/api/tweets`);
       if (!response.ok) {
         throw new Error("Failed to fetch tweets");

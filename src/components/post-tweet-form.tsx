@@ -12,6 +12,7 @@ const TextArea = styled.textarea`
   border: 2px solid white;
   padding: 20px;
   border-radius: 20px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   font-size: 16px;
   background-color: black;
   color: white;
@@ -21,16 +22,16 @@ const TextArea = styled.textarea`
   }
   &:focus {
     outline: none;
-    border-color: #1d9bf0;
+    border-color: #81c147;
   }
 `;
 
 const AttachFileButton = styled.label`
   padding: 10px 0px;
-  color: #1d9bf0;
+  color: #81c147;
   text-align: center;
   border-radius: 20px;
-  border: 1px solid #1d9bf0;
+  border: 1px solid #81c147;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -41,7 +42,7 @@ const AttachFileInput = styled.input`
 `;
 
 const SubmitBtn = styled.input`
-  background-color: #1d9bf0;
+  background-color: #81c147;
   color: white;
   border: none;
   padding: 10px 0px;

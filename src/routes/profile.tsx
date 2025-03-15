@@ -26,7 +26,7 @@ const AvatarUpload = styled.label`
   overflow: hidden;
   height: 80px;
   border-radius: 50%;
-  background-color: #1d9bf0;
+  background-color: #81c147;
   cursor: pointer;
   display: flex;
   justify-content: center;

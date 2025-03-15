@@ -39,12 +39,42 @@ const MenuItem = styled.div`
 
 export default function Layout() {
   const navigate = useNavigate();
+
   const onLogOut = async () => {
     const ok = confirm("로그아웃하시겠습니까?");
-    if (ok) {
+    if (!ok) return;
+
+    try {
+      const API_URL = import.meta.env.VITE_API_URL; // ✅ 환경변수에서 API URL 가져오기
+      const token = localStorage.getItem("jwt");
+
+      if (!token) {
+        alert("이미 로그아웃되었습니다.");
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/api/auth/logout`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("로그아웃 실패");
+      }
+
+      // ✅ 토큰 삭제 & 로그인 페이지로 이동
+      localStorage.removeItem("token");
+      alert("로그아웃되었습니다.");
       navigate("/login");
+    } catch (error) {
+      console.error("로그아웃 중 오류 발생:", error);
+      alert("로그아웃 중 오류가 발생했습니다.");
     }
   };
+
   return (
     <Wrapper>
       <Menu>
