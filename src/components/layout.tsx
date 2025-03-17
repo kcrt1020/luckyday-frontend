@@ -46,9 +46,14 @@ export default function Layout() {
 
     try {
       const API_URL = import.meta.env.VITE_API_URL; // ✅ 환경변수에서 API URL 가져오기
-      const token = localStorage.getItem("jwt");
+      const accessToken = localStorage.getItem("accessToken");
+      const refreshToken = localStorage.getItem("refreshToken");
 
-      if (!token) {
+      console.log("🚀 로그아웃 요청 URL:", `${API_URL}/api/auth/logout`);
+      console.log("🔑 보낸 엑세스 토큰:", accessToken);
+      console.log("🔑 보낸 리프레쉬쉬 토큰:", refreshToken);
+
+      if (!accessToken || !refreshToken) {
         alert("이미 로그아웃되었습니다.");
         return;
       }
@@ -57,8 +62,9 @@ export default function Layout() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          // Authorization: `Bearer ${accessToken}`,
         },
+        body: JSON.stringify({ refreshToken }),
       });
 
       if (!response.ok) {
@@ -66,11 +72,13 @@ export default function Layout() {
       }
 
       // ✅ 토큰 삭제 & 로그인 페이지로 이동
-      localStorage.removeItem("token");
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+
       alert("로그아웃되었습니다.");
       navigate("/login");
     } catch (error) {
-      console.error("로그아웃 중 오류 발생:", error);
+      console.error("🚨 로그아웃 중 오류 발생:", error);
       alert("로그아웃 중 오류가 발생했습니다.");
     }
   };

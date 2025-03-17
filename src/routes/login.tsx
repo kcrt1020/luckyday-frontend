@@ -8,6 +8,7 @@ import {
   Title,
   Wrapper,
 } from "../components/auth-components";
+import { apiRequest } from "../utills/api";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -17,9 +18,7 @@ export default function Login() {
   const navigate = useNavigate();
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const {
-      target: { name, value },
-    } = e;
+    const { name, value } = e.target;
     if (name === "email") {
       setEmail(value);
     } else if (name === "password") {
@@ -33,46 +32,41 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8081";
-
-      // const API_URL = "http://172.20.0.3:8080";
-      // const API_URL = "http://localhost:8081";
-
-      console.log("✅ API 요청 주소:", API_URL); // ✅ 콘솔에서 요청 주소 확인
-
-      const response = await fetch(`${API_URL}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      console.log("🟡 로그인 요청 시작...");
+      const data = await apiRequest(
+        "/api/auth/login",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
         },
-        body: JSON.stringify({ email, password }),
-      });
+        true
+      ); // ✅ 로그인 요청 표시
 
-      console.log("✅ email:", email, "password:", password);
+      console.log("🟢 로그인 응답 데이터:", data);
 
-      if (!response.ok) {
-        throw new Error(
-          (await response.json()).message || "Invalid email or password"
+      if (!data || !data.accessToken || !data.refreshToken) {
+        console.error("🚨 서버에서 올바른 토큰을 받지 못함:", data);
+        throw new Error("🚨 서버에서 유효한 토큰을 받지 못했습니다.");
+      }
+
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("refreshToken", data.refreshToken);
+
+      setTimeout(() => {
+        console.log(
+          "✅ 저장된 액세스 토큰:",
+          localStorage.getItem("accessToken")
         );
-      }
-
-      // ✅ response.text() 사용 (JWT는 JSON이 아닌 문자열)
-      const token = await response.text();
-      console.log("✅ 로그인 토큰:", token);
-
-      // 토큰을 저장
-      localStorage.setItem("jwt", token);
-
-      console.log("Login successful!", token);
-      navigate("/");
+        console.log(
+          "✅ 저장된 리프레시 토큰:",
+          localStorage.getItem("refreshToken")
+        );
+        navigate("/");
+      }, 0);
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setErrorMessage(err.message);
-      } else if (typeof err === "string") {
-        setErrorMessage(err);
-      } else {
-        setErrorMessage("An unexpected error occurred");
-      }
+      console.error("❌ 로그인 오류:", err);
+      setErrorMessage(err instanceof Error ? err.message : "로그인 실패");
     } finally {
       setLoading(false);
     }
@@ -80,7 +74,9 @@ export default function Login() {
 
   return (
     <Wrapper>
-      <Title>Log into LUCKY DAY</Title>
+      <Title>
+        Make Today <br /> a <strong>LUCKY DAY</strong>
+      </Title>
       <Form onSubmit={onSubmit}>
         <Input
           onChange={onChange}

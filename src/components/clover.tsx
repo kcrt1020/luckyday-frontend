@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { ITweet } from "./timeline";
+import { IClover } from "./timeline";
 import { useEffect, useState } from "react";
 
 const Wrapper = styled.div`
@@ -40,7 +40,7 @@ const DeleteButton = styled.button`
   cursor: pointer;
 `;
 
-export default function Tweet({ id, username, imageUrl, content }: ITweet) {
+export default function Clover({ id, username, imageUrl, content }: IClover) {
   const API_URL = import.meta.env.VITE_API_URL;
   const [currentUser, setCurrentUser] = useState<string | null>(null);
 
@@ -75,18 +75,18 @@ export default function Tweet({ id, username, imageUrl, content }: ITweet) {
     if (!ok) return;
 
     try {
-      const response = await fetch(`${API_URL}/api/tweets/${id}`, {
+      const response = await fetch(`${API_URL}/api/clovers/${id}`, {
         method: "DELETE",
       });
 
       if (!response.ok) {
-        throw new Error("Failed to delete tweet");
+        throw new Error("Failed to delete clover");
       }
 
       // 삭제 후 새로고침 (또는 상태 관리 필요)
       window.location.reload();
     } catch (error) {
-      console.error("Error deleting tweet:", error);
+      console.error("Error deleting clover:", error);
     }
   };
 
@@ -100,7 +100,7 @@ export default function Tweet({ id, username, imageUrl, content }: ITweet) {
         )}
       </Column>
       <Column>
-        {imageUrl ? <Photo src={imageUrl} alt="Tweet Image" /> : null}
+        {imageUrl ? <Photo src={imageUrl} alt="Clover Image" /> : null}
       </Column>
     </Wrapper>
   );

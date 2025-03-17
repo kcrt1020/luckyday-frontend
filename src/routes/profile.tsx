@@ -11,8 +11,8 @@ import {
   query,
   where,
 } from "firebase/firestore";
-import { ITweet } from "../components/timeline";
-import Tweet from "../components/tweet";
+import { IClover } from "../components/timeline";
+import Clover from "../components/clover";
 
 const Wrapper = styled.div`
   display: flex;
@@ -48,7 +48,7 @@ const Name = styled.span`
   font-size: 22px;
 `;
 
-const Tweets = styled.div`
+const Clovers = styled.div`
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -57,7 +57,7 @@ const Tweets = styled.div`
 export default function Profile() {
   const user = auth.currentUser;
   const [avatar, setAvatar] = useState(user?.photoURL);
-  const [tweets, setTweets] = useState<ITweet[]>([]);
+  const [clovers, setClovers] = useState<IClover[]>([]);
   const onAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const { files } = e.target;
     if (!user) return;
@@ -72,18 +72,18 @@ export default function Profile() {
       });
     }
   };
-  const fetchTweets = async () => {
-    const tweetQuery = query(
-      collection(db, "tweets"),
+  const fetchClovers = async () => {
+    const cloverQuery = query(
+      collection(db, "clovers"),
       where("userId", "==", user?.uid),
       orderBy("createdAt", "desc"),
       limit(25)
     );
-    const snapshot = await getDocs(tweetQuery);
-    const tweets = snapshot.docs.map((doc) => {
-      const { tweet, createdAt, userId, username, photo } = doc.data();
+    const snapshot = await getDocs(cloverQuery);
+    const clovers = snapshot.docs.map((doc) => {
+      const { clover, createdAt, userId, username, photo } = doc.data();
       return {
-        tweet,
+        clover,
         createdAt,
         userId,
         username,
@@ -91,10 +91,10 @@ export default function Profile() {
         id: doc.id,
       };
     });
-    setTweets(tweets);
+    setClovers(clovers);
   };
   useEffect(() => {
-    fetchTweets();
+    fetchClovers();
   });
 
   return (
@@ -125,11 +125,11 @@ export default function Profile() {
         accept="image/*"
       />
       <Name>{user?.displayName ?? "Anonymous"}</Name>
-      <Tweets>
-        {tweets.map((tweet) => (
-          <Tweet key={tweet.id} {...tweet} />
+      <Clovers>
+        {clovers.map((clover) => (
+          <Clover key={clover.id} {...clover} />
         ))}
-      </Tweets>
+      </Clovers>
     </Wrapper>
   );
 }

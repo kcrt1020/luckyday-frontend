@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import styled from "styled-components";
+import { apiRequest } from "../utills/api";
 
 const Form = styled.form`
   display: flex;
@@ -55,15 +56,13 @@ const SubmitBtn = styled.input`
   }
 `;
 
-export default function PostTweetForm() {
+export default function PostCloverForm() {
   const [isLoading, setLoading] = useState(false);
-  const [tweet, setTweet] = useState("");
+  const [clover, setClover] = useState("");
   const [file, setFile] = useState<File | null>(null);
 
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8081";
-
   const onChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setTweet(e.target.value);
+    setClover(e.target.value);
   };
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,55 +74,36 @@ export default function PostTweetForm() {
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (isLoading || tweet === "" || tweet.length > 180) return;
+    if (isLoading || clover === "" || clover.length > 180) return;
 
     try {
       setLoading(true);
 
       const formData = new FormData();
-      const tweetData = JSON.stringify({ content: tweet });
+      const cloverData = JSON.stringify({ content: clover });
       formData.append(
         "content",
-        new Blob([tweetData], { type: "application/json" })
+        new Blob([cloverData], { type: "application/json" })
       );
 
       if (file) {
         formData.append("file", file);
       }
 
-      // ✅ JWT 토큰 가져오기
-      const token = localStorage.getItem("jwt");
-      if (!token) {
-        console.error("🚨 JWT 토큰 없음 - 로그인 필요");
-        alert("로그인이 필요합니다.");
-        return;
-      }
-      console.log("📤 token : " + token);
-
-      const response = await fetch(`${API_URL}/api/tweets`, {
+      // ✅ API 요청 (apiRequest 사용)
+      const response = await apiRequest("/api/clovers", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`, // ✅ 올바른 템플릿 리터럴 사용
-        },
         body: formData,
       });
 
-      console.log("📩 [트윗 작성 요청] 서버 응답 상태 코드:", response.status);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("❌ [트윗 작성 요청] 서버 응답 오류:", errorData);
-        throw new Error(
-          `트윗 작성 실패: ${response.status} - ${
-            errorData.message || "알 수 없는 오류"
-          }`
-        );
+      if (!response) {
+        console.error("❌ [트윗 작성 실패]: 서버 응답 없음");
+        throw new Error("트윗 작성 실패: 서버 응답이 없습니다.");
       }
 
-      const responseData = await response.json();
-      console.log("✅ [트윗 작성 성공] 서버 응답 데이터:", responseData);
+      console.log("✅ [트윗 작성 성공]:", response);
 
-      setTweet("");
+      setClover("");
       setFile(null);
 
       // ✅ 트윗이 등록되면 페이지 새로고침
@@ -141,7 +121,7 @@ export default function PostTweetForm() {
         rows={5}
         maxLength={180}
         onChange={onChange}
-        value={tweet}
+        value={clover}
         placeholder="무슨 일이야?"
         required
       />
@@ -156,7 +136,7 @@ export default function PostTweetForm() {
       />
       <SubmitBtn
         type="submit"
-        value={isLoading ? "Posting..." : "Post Tweet"}
+        value={isLoading ? "Posting..." : "Post Clover"}
       />
     </Form>
   );
