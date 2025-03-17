@@ -9,6 +9,7 @@ import Layout from "./components/layout";
 import reset from "styled-reset";
 import styled, { createGlobalStyle } from "styled-components";
 import CreateAccount from "./routes/create-account";
+import Profile from "./routes/profile";
 
 const router = createBrowserRouter([
   {
@@ -32,6 +33,10 @@ const router = createBrowserRouter([
   {
     path: "/create-account",
     element: <CreateAccount />,
+  },
+  {
+    path: "/profile",
+    element: <Profile />,
   },
 ]);
 

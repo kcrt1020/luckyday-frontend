@@ -12,17 +12,20 @@ import {
 export default function CreateAccount() {
   const navigate = useNavigate();
   const [isLoading, setLoading] = useState(false);
-  const [username, setUsername] = useState("");
+  const [userId, setUserId] = useState("");
   const [email, setEmail] = useState("");
+  const [nickname, setNickname] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    if (name === "username") {
-      setUsername(value);
+    if (name === "userId") {
+      setUserId(value);
     } else if (name === "email") {
       setEmail(value);
+    } else if (name === "nickname") {
+      setNickname(value);
     } else if (name === "password") {
       setPassword(value);
     }
@@ -31,7 +34,14 @@ export default function CreateAccount() {
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
-    if (isLoading || username === "" || email === "" || password === "") return;
+    if (
+      isLoading ||
+      userId === "" ||
+      email === "" ||
+      nickname === "" ||
+      password === ""
+    )
+      return;
 
     setLoading(true);
 
@@ -43,7 +53,7 @@ export default function CreateAccount() {
           "Content-Type": "application/json",
         },
         credentials: "include", // ✅ 추가
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify({ userId, email, nickname, password }),
       });
 
       let data;
@@ -75,9 +85,9 @@ export default function CreateAccount() {
       <Form onSubmit={onSubmit}>
         <Input
           onChange={onChange}
-          name="username"
-          value={username}
-          placeholder="Name"
+          name="userId"
+          value={userId}
+          placeholder="아이디"
           type="text"
           required
         />
@@ -85,7 +95,7 @@ export default function CreateAccount() {
           onChange={onChange}
           name="email"
           value={email}
-          placeholder="Email"
+          placeholder="이메일"
           type="email"
           required
         />
@@ -93,18 +103,23 @@ export default function CreateAccount() {
           onChange={onChange}
           name="password"
           value={password}
-          placeholder="Password"
+          placeholder="비밀번호"
           type="password"
           required
         />
         <Input
-          type="submit"
-          value={isLoading ? "Loading..." : "Create Account"}
+          onChange={onChange}
+          name="nickname"
+          value={nickname}
+          placeholder="닉네임"
+          type="text"
+          required
         />
+        <Input type="submit" value={isLoading ? "가입 중..." : "회원가입"} />
       </Form>
       {error !== "" ? <ErrorMessage>{error}</ErrorMessage> : null}
       <Switcher>
-        Already have an account? <Link to={"/login"}>Log in &rarr;</Link>
+        이미 계정이 있나요? <Link to={"/login"}>로그인 &rarr;</Link>
       </Switcher>
     </Wrapper>
   );

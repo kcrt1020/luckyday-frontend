@@ -18,7 +18,7 @@ const Photo = styled.img`
   border-radius: 15px;
 `;
 
-const Username = styled.span`
+const UserInfo = styled.span`
   font-weight: 600;
   font-size: 15px;
 `;
@@ -40,34 +40,42 @@ const DeleteButton = styled.button`
   cursor: pointer;
 `;
 
-export default function Clover({ id, username, imageUrl, content }: IClover) {
+export default function Clover({
+  id,
+  email,
+  userId,
+  nickname,
+  imageUrl,
+  content,
+}: IClover) {
   const API_URL = import.meta.env.VITE_API_URL;
   const [currentUser, setCurrentUser] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const fetchCurrentUser = async () => {
       try {
-        const token = localStorage.getItem("token");
-        if (!token) return;
-
-        const response = await fetch(`${API_URL}/api/user/me`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch user");
+        const token = localStorage.getItem("accessToken");
+        if (!token) {
+          console.warn("🚨 로그인된 유저 정보 없음");
+          return;
         }
 
+        const response = await fetch(`${API_URL}/api/user/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!response.ok)
+          throw new Error("🚨 로그인된 유저 정보 가져오기 실패");
+
         const data = await response.json();
-        setCurrentUser(data.username); // 서버에서 받은 유저네임 저장
+        setCurrentUser(data.email); // ✅ 현재 로그인한 유저의 이메일 저장
+        console.log("🔍 현재 로그인한 유저 이메일:", data.email);
       } catch (error) {
         console.error("Error fetching user:", error);
       }
     };
 
-    fetchUser();
+    fetchCurrentUser();
   }, []);
 
   const onDelete = async () => {
@@ -77,13 +85,15 @@ export default function Clover({ id, username, imageUrl, content }: IClover) {
     try {
       const response = await fetch(`${API_URL}/api/clovers/${id}`, {
         method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
       });
 
       if (!response.ok) {
         throw new Error("Failed to delete clover");
       }
 
-      // 삭제 후 새로고침 (또는 상태 관리 필요)
       window.location.reload();
     } catch (error) {
       console.error("Error deleting clover:", error);
@@ -93,9 +103,11 @@ export default function Clover({ id, username, imageUrl, content }: IClover) {
   return (
     <Wrapper>
       <Column>
-        <Username>{username}</Username>
+        <UserInfo>
+          {nickname} (@{userId})
+        </UserInfo>
         <Payload>{content}</Payload>
-        {currentUser === username && (
+        {currentUser && currentUser === email && (
           <DeleteButton onClick={onDelete}>Delete</DeleteButton>
         )}
       </Column>

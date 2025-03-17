@@ -31,8 +31,8 @@ export default function ProtectedRoute({
         try {
           let response = await apiRequest(input as string, init);
 
-          console.log("🔍 fetchWithAuth 요청:", input);
-          console.log("🔍 초기 응답 상태 코드:", response?.status);
+          // console.log("🔍 fetchWithAuth 요청:", input);
+          // console.log("🔍 초기 응답 상태 코드:", response?.status);
 
           // ✅ 401 발생 시 액세스 토큰 갱신 후 재요청
           if (response?.status === 401) {

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import { apiRequest } from "../utills/api";
 
 const Form = styled.form`
   display: flex;
@@ -90,18 +89,29 @@ export default function PostCloverForm() {
         formData.append("file", file);
       }
 
-      // ✅ API 요청 (apiRequest 사용)
-      const response = await apiRequest("/api/clovers", {
+      // ✅ JWT 토큰 추가
+      const accessToken = localStorage.getItem("accessToken");
+      if (!accessToken) {
+        console.error("❌ [트윗 작성 오류]: 로그인 필요");
+        throw new Error("로그인이 필요합니다.");
+      }
+
+      // ✅ API 요청
+      const API_URL = import.meta.env.VITE_API_URL;
+      const response = await fetch(`${API_URL}/api/clovers`, {
         method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`, // ✅ JWT 토큰 추가
+        },
         body: formData,
       });
 
-      if (!response) {
-        console.error("❌ [트윗 작성 실패]: 서버 응답 없음");
-        throw new Error("트윗 작성 실패: 서버 응답이 없습니다.");
+      if (!response.ok) {
+        console.error("❌ [트윗 작성 실패]: 서버 응답 오류", response.status);
+        throw new Error(`트윗 작성 실패: ${response.status}`);
       }
 
-      console.log("✅ [트윗 작성 성공]:", response);
+      console.log("✅ [트윗 작성 성공]:", await response.json());
 
       setClover("");
       setFile(null);

@@ -82,7 +82,7 @@ export default function Login() {
           onChange={onChange}
           name="email"
           value={email}
-          placeholder="Email"
+          placeholder="이메일"
           type="email"
           required
         />
@@ -90,20 +90,19 @@ export default function Login() {
           onChange={onChange}
           name="password"
           value={password}
-          placeholder="Password"
+          placeholder="비밀번호"
           type="password"
           required
         />
         <Input
           type="submit"
-          value={loading ? "Logging in..." : "Log In"}
+          value={loading ? "로그인 중..." : "로그인"}
           disabled={loading}
         />
       </Form>
       {errorMessage !== "" ? <ErrorMessage>{errorMessage}</ErrorMessage> : null}
       <Switcher>
-        Don't have an account?{" "}
-        <Link to={"/create-account"}>Create one &rarr;</Link>
+        계정이 없으신가요? <Link to={"/create-account"}>회원가입 &rarr;</Link>
       </Switcher>
     </Wrapper>
   );

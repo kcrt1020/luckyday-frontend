@@ -49,9 +49,9 @@ export default function Layout() {
       const accessToken = localStorage.getItem("accessToken");
       const refreshToken = localStorage.getItem("refreshToken");
 
-      console.log("🚀 로그아웃 요청 URL:", `${API_URL}/api/auth/logout`);
-      console.log("🔑 보낸 엑세스 토큰:", accessToken);
-      console.log("🔑 보낸 리프레쉬쉬 토큰:", refreshToken);
+      // console.log("🚀 로그아웃 요청 URL:", `${API_URL}/api/auth/logout`);
+      // console.log("🔑 보낸 엑세스 토큰:", accessToken);
+      // console.log("🔑 보낸 리프레쉬 토큰:", refreshToken);
 
       if (!accessToken || !refreshToken) {
         alert("이미 로그아웃되었습니다.");
@@ -75,7 +75,6 @@ export default function Layout() {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
 
-      alert("로그아웃되었습니다.");
       navigate("/login");
     } catch (error) {
       console.error("🚨 로그아웃 중 오류 발생:", error);

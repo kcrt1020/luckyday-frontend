@@ -8,7 +8,8 @@ export interface IClover {
   content: string;
   imageUrl?: string;
   userId: string;
-  username: string;
+  email: string;
+  nickname: string;
   createdAt: string;
 }
 
@@ -34,7 +35,7 @@ export default function Timeline() {
         const API_URL = import.meta.env.VITE_API_URL;
         const accessToken = localStorage.getItem("accessToken");
 
-        console.log("🔍 요청 전 액세스 토큰:", accessToken);
+        // console.log("🔍 요청 전 액세스 토큰:", accessToken);
 
         const response = await fetch(`${API_URL}/api/clovers`, {
           method: "GET",
@@ -44,7 +45,7 @@ export default function Timeline() {
           },
         });
 
-        console.log("🔍 클로버 API 응답 상태 코드:", response.status);
+        // console.log("🔍 클로버 API 응답 상태 코드:", response.status);
 
         if (response.status === 401) {
           console.warn("🔄 401 발생 - 액세스 토큰 갱신 시도");
