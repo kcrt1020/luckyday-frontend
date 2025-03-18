@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
+import { apiRequest } from "../utills/api";
+import Timeline from "../components/timeline"; // ✅ Timeline 불러오기
 
-const API_URL = import.meta.env.VITE_API_URL;
-
-// 클로버 타입 정의
-interface IClover {
-  id: string;
+interface IProfile {
+  nickname: string;
+  profileImage?: string | null;
+  bio?: string;
+  location?: string;
+  website?: string;
   userId: string;
-  imageUrl?: string;
-  content: string;
+  email: string;
 }
 
 const Wrapper = styled.div`
@@ -16,11 +18,12 @@ const Wrapper = styled.div`
   align-items: center;
   flex-direction: column;
   gap: 20px;
+  overflow-y: scroll;
+  height: 80vh;
 `;
 
 const ProfileUpload = styled.label`
   width: 80px;
-  overflow: hidden;
   height: 80px;
   border-radius: 50%;
   background-color: #81c147;
@@ -28,13 +31,20 @@ const ProfileUpload = styled.label`
   display: flex;
   justify-content: center;
   align-items: center;
+  overflow: hidden;
+  min-width: 80px;
+  min-height: 80px;
+
   svg {
-    width: 50px;
+    width: 50px; // ✅ 아이콘 크기 조정
+    height: 50px;
   }
 `;
 
 const ProfileImg = styled.img`
   width: 100%;
+  height: 100%;
+  object-fit: cover;
 `;
 
 const ProfileInput = styled.input`
@@ -45,22 +55,16 @@ const Name = styled.span`
   font-size: 22px;
 `;
 
-const Clovers = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-`;
-
 export default function Profile() {
-  const [profile, setProfile] = useState({
+  const [profile, setProfile] = useState<IProfile>({
     nickname: "",
-    profileImage: "",
+    profileImage: null,
     bio: "",
     location: "",
     website: "",
+    email: "",
+    userId: "",
   });
-
-  const [clovers, setClovers] = useState<IClover[]>([]);
 
   useEffect(() => {
     fetchProfile();
@@ -68,48 +72,14 @@ export default function Profile() {
 
   const fetchProfile = async () => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-      const response = await fetch(`${API_URL}/api/profile/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch profile");
+      console.log("🚀 Fetching profile...");
+      const response = await apiRequest("/api/profile/me");
+      if (response) {
+        console.log("✅ Profile fetched successfully:", response);
+        setProfile(response);
       }
-
-      const data = await response.json();
-      setProfile(data);
-
-      // 유저 ID 기반으로 클로버 가져오기
-      fetchClovers(data.id);
     } catch (error) {
-      console.error("Error fetching profile:", error);
-    }
-  };
-
-  const fetchClovers = async (userId: string) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-      const response = await fetch(`${API_URL}/api/clovers?userId=${userId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch clovers");
-      }
-
-      const data: IClover[] = await response.json();
-      setClovers(data);
-    } catch (error) {
-      console.error("Error fetching clovers:", error);
+      console.error("❌ Error fetching profile:", error);
     }
   };
 
@@ -121,23 +91,17 @@ export default function Profile() {
     formData.append("profileImage", files[0]);
 
     try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-      const response = await fetch(`${API_URL}/api/profile/avatar`, {
+      const response = await apiRequest("/api/profile/avatar", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
         body: formData,
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to upload profile image");
+      if (response) {
+        setProfile((prev) => ({
+          ...prev,
+          profileImage: response.profileImage,
+        }));
       }
-
-      const data = await response.json();
-      setProfile((prev) => ({ ...prev, profileImage: data.profileImage }));
     } catch (error) {
       console.error("Error uploading profile image:", error);
     }
@@ -147,7 +111,11 @@ export default function Profile() {
     <Wrapper>
       <ProfileUpload htmlFor="profile">
         {profile.profileImage ? (
-          <ProfileImg src={profile.profileImage} />
+          <ProfileImg
+            src={profile.profileImage}
+            alt="User Profile"
+            onError={(e) => (e.currentTarget.style.display = "none")}
+          />
         ) : (
           <svg
             fill="currentColor"
@@ -169,14 +137,12 @@ export default function Profile() {
         type="file"
         accept="image/*"
       />
-      <Name>{profile.nickname || "Anonymous"}</Name>
-      <Clovers>
-        {clovers.length > 0 ? (
-          clovers.map((clover) => <div key={clover.id}>{clover.content}</div>)
-        ) : (
-          <p>등록된 클로버가 없습니다.</p>
-        )}
-      </Clovers>
+      <Name>
+        {profile.nickname || "Anonymous"} (@{profile.userId || "No ID"})
+      </Name>
+
+      {/* ✅ 타임라인 컴포넌트 재사용 */}
+      <Timeline userId={profile.userId} />
     </Wrapper>
   );
 }

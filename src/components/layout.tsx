@@ -5,11 +5,13 @@ const Wrapper = styled.div`
   display: grid;
   gap: 20px;
   grid-template-columns: 1fr 4fr;
-  height: 100px;
+  height: 90vh; // ✅ 화면 전체를 덮도록 수정
   padding: 50px 0px;
   width: 100%;
   max-width: 860px;
+  background-color: inherit; // ✅ 부모(body)의 배경색을 따라가도록 설정
 `;
+
 const Menu = styled.div`
   display: flex;
   flex-direction: column;
@@ -35,6 +37,12 @@ const MenuItem = styled.div`
       fill: tomato;
     }
   }
+`;
+
+const Content = styled.div`
+  width: 100%;
+  height: 100%;
+  background-color: inherit; // ✅ 글로벌 스타일의 배경을 따라가도록 설정
 `;
 
 export default function Layout() {
@@ -140,7 +148,9 @@ export default function Layout() {
           </svg>
         </MenuItem>
       </Menu>
-      <Outlet />
+      <Content>
+        <Outlet />
+      </Content>
     </Wrapper>
   );
 }

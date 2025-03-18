@@ -36,7 +36,17 @@ const router = createBrowserRouter([
   },
   {
     path: "/profile",
-    element: <Profile />,
+    element: (
+      <ProtectedRoute>
+        <Layout />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        path: "",
+        element: <Profile />,
+      },
+    ],
   },
 ]);
 
@@ -68,6 +78,10 @@ function App() {
   };
 
   useEffect(() => {
+    console.log(
+      "✅ GlobalStyles 적용 확인:",
+      document.body.style.backgroundColor
+    );
     init();
   }, []);
 

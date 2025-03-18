@@ -2,6 +2,9 @@ import { refreshAccessToken } from "./auth";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+/**
+ * ✅ API 요청을 수행하고, 필요하면 액세스 토큰을 자동 갱신하는 함수
+ */
 export const apiRequest = async (
   url: string,
   options: RequestInit = {},
@@ -15,20 +18,16 @@ export const apiRequest = async (
     ...(options.headers as Record<string, string>),
   };
 
-  try {
-    console.log("🔍 요청 URL:", `${API_URL}${url}`);
-    console.log("🔍 요청 헤더:", headers);
+  console.log("🔍 API 요청 URL:", `${API_URL}${url}`);
+  console.log("🔍 API 요청 헤더:", headers); // ✅ JWT 포함 여부 확인
 
+  try {
     let response = await fetch(`${API_URL}${url}`, { ...options, headers });
 
     console.log("🔍 응답 상태 코드:", response.status);
 
-    // ✅ 로그인 요청은 JSON을 바로 반환 (401 핸들링 X)
-    if (isLogin) {
-      return response.json(); // ✅ 로그인에서는 무조건 JSON 반환
-    }
+    if (isLogin) return response.json();
 
-    // ✅ 401 발생 시 액세스 토큰 갱신 시도
     if (response.status === 401) {
       console.warn("🔄 액세스 토큰 만료됨. 새 토큰 요청...");
       const newAccessToken = await refreshAccessToken();
@@ -36,8 +35,13 @@ export const apiRequest = async (
       if (newAccessToken) {
         console.log("✅ 새 액세스 토큰 발급 완료!");
 
+        // ✅ 새로운 accessToken을 localStorage에 저장
+        localStorage.setItem("accessToken", newAccessToken);
+
         headers.Authorization = `Bearer ${newAccessToken}`;
         response = await fetch(`${API_URL}${url}`, { ...options, headers });
+
+        console.log("🔄 새 액세스 토큰으로 재요청 결과:", response.status);
 
         if (response.status === 401) {
           console.error("🚨 새 액세스 토큰으로도 401 발생 - 로그아웃 처리");
@@ -51,15 +55,17 @@ export const apiRequest = async (
       }
     }
 
-    return response.ok ? response.json() : null; // ✅ JSON 응답 보장
+    return response.ok ? response.json() : null;
   } catch (error) {
     console.error("🚨 API 요청 중 오류 발생:", error);
     return null;
   }
 };
 
-// ✅ 로그아웃 처리 함수
-const handleLogout = () => {
+/**
+ * ✅ 로그아웃 처리 (전역적으로 사용)
+ */
+export const handleLogout = () => {
   console.warn("🚨 세션 만료 - 로그아웃 처리");
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
