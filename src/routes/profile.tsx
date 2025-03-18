@@ -1,23 +1,24 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { apiRequest } from "../utills/api";
-import Timeline from "../components/timeline"; // ✅ Timeline 불러오기
+import Timeline from "../components/timeline";
 
 interface IProfile {
   nickname: string;
   profileImage?: string | null;
-  bio?: string;
-  location?: string;
-  website?: string;
+  bio?: string | null;
+  location?: string | null;
+  website?: string | null;
   userId: string;
   email: string;
+  birth_date?: string | null;
 }
 
 const Wrapper = styled.div`
   display: flex;
   align-items: center;
   flex-direction: column;
-  gap: 20px;
+  gap: 40px;
   overflow-y: scroll;
   height: 80vh;
 `;
@@ -36,7 +37,7 @@ const ProfileUpload = styled.label`
   min-height: 80px;
 
   svg {
-    width: 50px; // ✅ 아이콘 크기 조정
+    width: 50px;
     height: 50px;
   }
 `;
@@ -53,17 +54,31 @@ const ProfileInput = styled.input`
 
 const Name = styled.span`
   font-size: 22px;
+  font-weight: bold;
+`;
+
+const Bio = styled.p`
+  font-size: 16px;
+  text-align: center;
+  max-width: 80%;
+`;
+
+const ExtraInfo = styled.div`
+  font-size: 14px;
+  color: grey;
+  text-align: center;
 `;
 
 export default function Profile() {
   const [profile, setProfile] = useState<IProfile>({
-    nickname: "",
+    nickname: "Anonymous",
     profileImage: null,
-    bio: "",
-    location: "",
-    website: "",
+    bio: null,
+    location: null,
+    website: null,
     email: "",
-    userId: "",
+    userId: "No ID",
+    birth_date: null,
   });
 
   useEffect(() => {
@@ -76,7 +91,15 @@ export default function Profile() {
       const response = await apiRequest("/api/profile/me");
       if (response) {
         console.log("✅ Profile fetched successfully:", response);
-        setProfile(response);
+        setProfile({
+          ...response,
+          nickname: response.nickname || "Anonymous",
+          userId: response.userId || "No ID",
+          bio: response.bio || "소개가 없습니다.",
+          location: response.location || "위치 정보 없음",
+          website: response.website || "웹사이트 없음",
+          birth_date: response.birth_date || "생년월일 정보 없음",
+        });
       }
     } catch (error) {
       console.error("❌ Error fetching profile:", error);
@@ -90,31 +113,40 @@ export default function Profile() {
     const formData = new FormData();
     formData.append("profileImage", files[0]);
 
-    try {
-      const response = await apiRequest("/api/profile/avatar", {
-        method: "POST",
-        body: formData,
-      });
+    console.log([...formData]); // FormData 확인용
 
-      if (response) {
-        setProfile((prev) => ({
-          ...prev,
-          profileImage: response.profileImage,
-        }));
-      }
+    try {
+      const response = await apiRequest(
+        "/api/profile/avatar",
+        {
+          method: "POST",
+          body: formData,
+        },
+        false,
+        true
+      ); // ✅ isMultipart = true 추가
+
+      if (!response) throw new Error("Failed to upload");
+
+      setProfile((prev) => ({
+        ...prev,
+        profileImage: response.profileImage,
+      }));
     } catch (error) {
       console.error("Error uploading profile image:", error);
     }
   };
+
+  const API_URL = import.meta.env.VITE_API_URL;
 
   return (
     <Wrapper>
       <ProfileUpload htmlFor="profile">
         {profile.profileImage ? (
           <ProfileImg
-            src={profile.profileImage}
+            src={`${API_URL}${profile.profileImage}`} // 업로드된 이미지 URL 생성
             alt="User Profile"
-            onError={(e) => (e.currentTarget.style.display = "none")}
+            onError={(e) => (e.currentTarget.style.display = "none")} // 이미지 로드 실패 시 숨김
           />
         ) : (
           <svg
@@ -138,10 +170,31 @@ export default function Profile() {
         accept="image/*"
       />
       <Name>
-        {profile.nickname || "Anonymous"} (@{profile.userId || "No ID"})
+        {profile.nickname} (@{profile.userId})
       </Name>
 
-      {/* ✅ 타임라인 컴포넌트 재사용 */}
+      <Bio>{profile.bio}</Bio>
+
+      <ExtraInfo>
+        <p>📍 {profile.location}</p>
+        <p>
+          🌐{" "}
+          {profile.website && profile.website !== "웹사이트 없음" ? (
+            <a
+              href={profile.website || ""}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {profile.website}
+            </a>
+          ) : (
+            "웹사이트 없음"
+          )}
+        </p>
+        <p>🎂 {profile.birth_date}</p>
+      </ExtraInfo>
+
+      {/* ✅ 타임라인 컴포넌트 추가 */}
       <Timeline userId={profile.userId} />
     </Wrapper>
   );

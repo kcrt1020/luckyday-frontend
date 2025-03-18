@@ -112,7 +112,9 @@ export default function Clover({
         )}
       </Column>
       <Column>
-        {imageUrl ? <Photo src={imageUrl} alt="Clover Image" /> : null}
+        {imageUrl ? (
+          <Photo src={`${API_URL}${imageUrl}`} alt="Clover Image" />
+        ) : null}
       </Column>
     </Wrapper>
   );

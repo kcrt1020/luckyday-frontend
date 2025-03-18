@@ -8,18 +8,22 @@ const API_URL = import.meta.env.VITE_API_URL;
 export const apiRequest = async (
   url: string,
   options: RequestInit = {},
-  isLogin = false
+  isLogin = false,
+  isMultipart = false // ✅ 파일 업로드 요청인지 여부 추가
 ) => {
   const token = localStorage.getItem("accessToken");
 
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}), // ✅ JWT 토큰 추가
+    ...((!isMultipart && { "Content-Type": "application/json" }) as Record<
+      string,
+      string
+    >), // ✅ 파일 업로드 시 Content-Type을 설정하지 않도록 처리
     ...(options.headers as Record<string, string>),
   };
 
   console.log("🔍 API 요청 URL:", `${API_URL}${url}`);
-  console.log("🔍 API 요청 헤더:", headers); // ✅ JWT 포함 여부 확인
+  console.log("🔍 API 요청 헤더:", headers);
 
   try {
     let response = await fetch(`${API_URL}${url}`, { ...options, headers });
@@ -34,10 +38,7 @@ export const apiRequest = async (
 
       if (newAccessToken) {
         console.log("✅ 새 액세스 토큰 발급 완료!");
-
-        // ✅ 새로운 accessToken을 localStorage에 저장
         localStorage.setItem("accessToken", newAccessToken);
-
         headers.Authorization = `Bearer ${newAccessToken}`;
         response = await fetch(`${API_URL}${url}`, { ...options, headers });
 
