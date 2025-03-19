@@ -27,7 +27,7 @@ const ProfileUpload = styled.label`
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background-color: #81c147;
+  background-color: #ccc;
   cursor: pointer;
   display: flex;
   justify-content: center;

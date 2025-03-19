@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { IClover } from "./timeline";
 import { useEffect, useState } from "react";
+import { format, addHours, getYear } from "date-fns";
 
 const Wrapper = styled.div`
   display: grid;
@@ -8,9 +9,38 @@ const Wrapper = styled.div`
   padding: 20px;
   border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 15px;
+  position: relative;
+  &:hover {
+    outline: none;
+    border-color: #81c147;
+  }
 `;
 
 const Column = styled.div``;
+
+const ProfileWrapper = styled.div`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #ccc; /* 기본 배경 */
+  margin-right: 10px;
+`;
+
+const ProfileImg = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
+const ProfileSVG = styled.svg`
+  width: 50%;
+  height: 50%;
+  fill: white;
+`;
 
 const Photo = styled.img`
   width: 100px;
@@ -18,7 +48,9 @@ const Photo = styled.img`
   border-radius: 15px;
 `;
 
-const UserInfo = styled.span`
+const UserInfo = styled.div`
+  display: flex;
+  align-items: center;
   font-weight: 600;
   font-size: 15px;
 `;
@@ -26,6 +58,7 @@ const UserInfo = styled.span`
 const Payload = styled.p`
   margin: 10px 0px;
   font-size: 18px;
+  text-align: left;
 `;
 
 const DeleteButton = styled.button`
@@ -33,11 +66,14 @@ const DeleteButton = styled.button`
   color: white;
   font-weight: 600;
   border: 0;
-  font-size: 12px;
-  padding: 5px 10px;
+  font-size: 14px;
+  padding: 3px 9px;
   text-transform: uppercase;
   border-radius: 5px;
   cursor: pointer;
+  position: absolute;
+  top: 10px;
+  right: 10px;
 `;
 
 export default function Clover({
@@ -47,6 +83,8 @@ export default function Clover({
   nickname,
   imageUrl,
   content,
+  profileImage,
+  createdAt,
 }: IClover) {
   const API_URL = import.meta.env.VITE_API_URL;
   const [currentUser, setCurrentUser] = useState<string | null>(null);
@@ -100,17 +138,67 @@ export default function Clover({
     }
   };
 
+  const formatTime = (createdAt: string) => {
+    const formattedDateString = createdAt.replace(" ", "T");
+    const utcDate = new Date(formattedDateString);
+
+    if (isNaN(utcDate.getTime())) {
+      console.error("🚨 Invalid Date Format:", createdAt);
+      return "알 수 없음";
+    }
+
+    // ✅ 한국 시간(KST) 변환
+    const kstDate = addHours(utcDate, 9);
+    const now = new Date();
+
+    const diffInMinutes = (now.getTime() - kstDate.getTime()) / (1000 * 60);
+    const diffInHours = diffInMinutes / 60;
+
+    // ✅ 현재 연도 가져오기
+    const currentYear = getYear(now);
+    const createdYear = getYear(kstDate);
+
+    if (diffInMinutes < 60) {
+      return `${Math.floor(diffInMinutes)}분`;
+    } else if (diffInHours < 24) {
+      return `${Math.floor(diffInHours)}시간`;
+    } else {
+      return createdYear === currentYear
+        ? format(kstDate, "MM월 dd일") // 같은 연도면 "MM-DD"
+        : format(kstDate, "yyyy년 MM월 dd일"); // 다른 연도면 "YYYY-MM-DD"
+    }
+  };
+
   return (
     <Wrapper>
+      {currentUser && currentUser === email && (
+        <DeleteButton onClick={onDelete}>X</DeleteButton>
+      )}
+
       <Column>
         <UserInfo>
-          {nickname} (@{userId})
+          <ProfileWrapper>
+            {profileImage !== "Unknown" ? (
+              <ProfileImg src={`${API_URL}${profileImage}`} alt="Profile" />
+            ) : (
+              <ProfileSVG
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path
+                  clipRule="evenodd"
+                  fillRule="evenodd"
+                  d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z"
+                ></path>
+              </ProfileSVG>
+            )}
+          </ProfileWrapper>
+          {nickname} (@{userId}) &nbsp;<span>{formatTime(createdAt)}</span>
         </UserInfo>
         <Payload>{content}</Payload>
-        {currentUser && currentUser === email && (
-          <DeleteButton onClick={onDelete}>Delete</DeleteButton>
-        )}
       </Column>
+
       <Column>
         {imageUrl ? (
           <Photo src={`${API_URL}${imageUrl}`} alt="Clover Image" />

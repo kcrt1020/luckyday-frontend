@@ -11,6 +11,7 @@ export interface IClover {
   email: string;
   nickname: string;
   createdAt: string;
+  profileImage: string;
 }
 
 const Wrapper = styled.div`
