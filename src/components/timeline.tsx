@@ -16,8 +16,9 @@ export interface IClover {
 
 const Wrapper = styled.div`
   display: grid;
-  gap: 10px;
+  gap: 20px;
   flex-direction: column;
+  background-color: #222;
 `;
 
 export default function Timeline({ userId }: { userId?: string }) {

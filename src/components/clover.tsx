@@ -1,7 +1,8 @@
 import styled from "styled-components";
-import { IClover } from "./timeline";
 import { useEffect, useState } from "react";
 import { format, addHours, getYear } from "date-fns";
+import { useNavigate } from "react-router-dom";
+import { IClover } from "./timeline";
 
 const Wrapper = styled.div`
   display: grid;
@@ -10,6 +11,7 @@ const Wrapper = styled.div`
   border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 15px;
   position: relative;
+  cursor: pointer;
   &:hover {
     outline: none;
     border-color: #81c147;
@@ -26,7 +28,7 @@ const ProfileWrapper = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #ccc; /* 기본 배경 */
+  background-color: #ccc;
   margin-right: 10px;
 `;
 
@@ -88,6 +90,7 @@ export default function Clover({
 }: IClover) {
   const API_URL = import.meta.env.VITE_API_URL;
   const [currentUser, setCurrentUser] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -106,8 +109,7 @@ export default function Clover({
           throw new Error("🚨 로그인된 유저 정보 가져오기 실패");
 
         const data = await response.json();
-        setCurrentUser(data.email); // ✅ 현재 로그인한 유저의 이메일 저장
-        console.log("🔍 현재 로그인한 유저 이메일:", data.email);
+        setCurrentUser(data.email);
       } catch (error) {
         console.error("Error fetching user:", error);
       }
@@ -147,14 +149,10 @@ export default function Clover({
       return "알 수 없음";
     }
 
-    // ✅ 한국 시간(KST) 변환
     const kstDate = addHours(utcDate, 9);
     const now = new Date();
-
     const diffInMinutes = (now.getTime() - kstDate.getTime()) / (1000 * 60);
     const diffInHours = diffInMinutes / 60;
-
-    // ✅ 현재 연도 가져오기
     const currentYear = getYear(now);
     const createdYear = getYear(kstDate);
 
@@ -164,15 +162,22 @@ export default function Clover({
       return `${Math.floor(diffInHours)}시간`;
     } else {
       return createdYear === currentYear
-        ? format(kstDate, "MM월 dd일") // 같은 연도면 "MM-DD"
-        : format(kstDate, "yyyy년 MM월 dd일"); // 다른 연도면 "YYYY-MM-DD"
+        ? format(kstDate, "MM월 dd일")
+        : format(kstDate, "yyyy년 MM월 dd일");
     }
   };
 
   return (
-    <Wrapper>
+    <Wrapper onClick={() => navigate(`/clovers/${id}`)}>
       {currentUser && currentUser === email && (
-        <DeleteButton onClick={onDelete}>X</DeleteButton>
+        <DeleteButton
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
+        >
+          X
+        </DeleteButton>
       )}
 
       <Column>
@@ -181,16 +186,8 @@ export default function Clover({
             {profileImage !== "Unknown" ? (
               <ProfileImg src={`${API_URL}${profileImage}`} alt="Profile" />
             ) : (
-              <ProfileSVG
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
-                <path
-                  clipRule="evenodd"
-                  fillRule="evenodd"
-                  d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z"
-                ></path>
+              <ProfileSVG viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z"></path>
               </ProfileSVG>
             )}
           </ProfileWrapper>

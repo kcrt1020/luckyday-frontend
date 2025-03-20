@@ -10,6 +10,7 @@ import reset from "styled-reset";
 import styled, { createGlobalStyle } from "styled-components";
 import CreateAccount from "./routes/create-account";
 import Profile from "./routes/profile";
+import CloverDetail from "./routes/clover-detail";
 
 const router = createBrowserRouter([
   {
@@ -48,27 +49,50 @@ const router = createBrowserRouter([
       },
     ],
   },
+  {
+    path: "/clovers/:id",
+    element: (
+      <ProtectedRoute>
+        <Layout />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        path: "",
+        element: <CloverDetail />,
+      },
+    ],
+  },
 ]);
 
 const GlobalStyles = createGlobalStyle`
   ${reset};
-  *{
+  * {
     box-sizing: border-box;
   }
-  body {
-    background-color: black;
-    color: white;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  html, body {
+  min-height: 100vh;
+  background-color: black;
+  color: white;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow-x: hidden;
+}
+
+  #root {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
   }
   ::-webkit-scrollbar {
-    display:none;
+    display: none;
   }
 `;
 
 const Wrapper = styled.div`
-  height: 90vh;
+  flex: 1;
   display: flex;
   justify-content: center;
+  background-color: black;
 `;
 
 function App() {
