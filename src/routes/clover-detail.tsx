@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { format, addHours } from "date-fns";
+import Clover from "../components/clover";
+import { apiRequest } from "../utills/api";
 
 interface Clover {
   id: string;
@@ -15,7 +17,7 @@ interface Clover {
 }
 
 const Wrapper = styled.div`
-  width: 700px; /* 타임라인 크기에 맞춤 */
+  width: 700px;
   margin: 20px auto;
   padding: 20px;
   border: 1px solid rgba(255, 255, 255, 0.5);
@@ -79,21 +81,24 @@ const TimeStamp = styled.span`
 export default function CloverDetail() {
   const { id } = useParams();
   const API_URL = import.meta.env.VITE_API_URL;
+
   const [clover, setClover] = useState<Clover | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // ✅ 댓글 관련 상태들
+  const [replies, setReplies] = useState<Clover[]>([]);
+  const [reply, setReply] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  // ✅ 원글 조회
   useEffect(() => {
     const fetchClover = async () => {
       try {
-        console.log("🟡 API 요청 시작...");
-
         const token = localStorage.getItem("accessToken");
         if (!token) {
           console.warn("🚨 로그인된 유저 정보 없음");
           return;
         }
-
-        console.log("🔵 토큰 확인:", token);
 
         const response = await fetch(`${API_URL}/api/clovers/${id}`, {
           headers: {
@@ -101,15 +106,11 @@ export default function CloverDetail() {
           },
         });
 
-        console.log("🟠 서버 응답 상태 코드:", response.status);
-
         if (!response.ok) {
           throw new Error(`🚨 클로버 가져오기 실패 (HTTP ${response.status})`);
         }
 
         const data: Clover = await response.json();
-        console.log("🟢 클로버 데이터:", data);
-
         setClover(data);
       } catch (error) {
         console.error("🚨 API 요청 중 오류 발생:", error);
@@ -117,9 +118,65 @@ export default function CloverDetail() {
         setLoading(false);
       }
     };
+
     fetchClover();
   }, [id, API_URL]);
 
+  // ✅ 댓글 조회
+  useEffect(() => {
+    const fetchReplies = async () => {
+      try {
+        const data = await apiRequest(`/api/clovers/replies/${id}`);
+        setReplies(data);
+      } catch (e) {
+        console.error("❌ 댓글 불러오기 실패", e);
+      }
+    };
+
+    if (id) fetchReplies();
+  }, [id]);
+
+  // ✅ 댓글 등록
+  const handleSubmitReply = async () => {
+    if (!reply.trim()) return;
+    setSubmitting(true);
+
+    try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) throw new Error("로그인이 필요합니다.");
+
+      const cloverData = JSON.stringify({
+        content: reply,
+        parentClover: { id: Number(id) },
+      });
+
+      const formData = new FormData();
+      formData.append(
+        "content",
+        new Blob([cloverData], { type: "application/json" })
+      );
+
+      const res = await fetch(`${API_URL}/api/clovers`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("댓글 등록 실패");
+
+      const newReply = await res.json();
+      setReplies((prev) => [newReply, ...prev]);
+      setReply("");
+    } catch (e) {
+      console.error("❌ 댓글 등록 실패", e);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // ✅ 시간 포맷
   const formatTime = (createdAt: string) => {
     const utcDate = new Date(createdAt);
     const kstDate = addHours(utcDate, 9);
@@ -131,6 +188,7 @@ export default function CloverDetail() {
 
   return (
     <Wrapper>
+      {/* 원글 */}
       <UserInfo>
         <ProfileWrapper>
           {clover.profileImage !== "Unknown" ? (
@@ -149,10 +207,50 @@ export default function CloverDetail() {
           <TimeStamp>{formatTime(clover.createdAt)}</TimeStamp>
         </div>
       </UserInfo>
+
       <Content>{clover.content}</Content>
+
       {clover.imageUrl && (
         <Image src={`${API_URL}${clover.imageUrl}`} alt="Clover" />
       )}
+
+      {/* 댓글 작성 */}
+      <div>
+        <textarea
+          rows={3}
+          placeholder="댓글을 입력하세요..."
+          value={reply}
+          onChange={(e) => setReply(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "10px",
+            marginTop: "20px",
+            borderRadius: "10px",
+            fontSize: "15px",
+          }}
+        />
+        <button
+          onClick={handleSubmitReply}
+          disabled={submitting}
+          style={{
+            marginTop: "10px",
+            padding: "8px 16px",
+            borderRadius: "8px",
+            backgroundColor: "#81c147",
+            border: "none",
+            color: "white",
+            cursor: "pointer",
+          }}
+        >
+          등록
+        </button>
+      </div>
+
+      <div style={{ marginTop: "30px" }}>
+        {replies.map((reply) => (
+          <Clover key={reply.id} {...reply} />
+        ))}
+      </div>
     </Wrapper>
   );
 }

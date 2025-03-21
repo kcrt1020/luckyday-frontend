@@ -12,6 +12,7 @@ export interface IClover {
   nickname: string;
   createdAt: string;
   profileImage: string;
+  isReply?: boolean;
 }
 
 const Wrapper = styled.div`

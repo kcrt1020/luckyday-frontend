@@ -100,7 +100,7 @@ export default function CloverActions({
   useEffect(() => {
     const fetchReplies = async () => {
       try {
-        const res = await apiRequest(`/api/clovers?parentId=${cloverId}`);
+        const res = await apiRequest(`/api/clovers/replies/${cloverId}`);
         setReplies(res);
       } catch (e) {
         console.error("❌ 댓글 목록 로드 실패", e);
@@ -184,7 +184,9 @@ export default function CloverActions({
   return (
     <div onClick={(e) => e.stopPropagation()}>
       <ActionBar>
-        <ActionItem onClick={toggleReply}>💬 댓글</ActionItem>
+        <ActionItem onClick={toggleReply}>
+          💬 댓글 ({replies.length})
+        </ActionItem>
 
         <ActionItem onClick={toggleLike}>
           <ActionIcon $animate={animateLike}>{liked ? "🍀" : "○"}</ActionIcon>

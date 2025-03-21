@@ -64,6 +64,20 @@ const Payload = styled.p`
   text-align: left;
 `;
 
+const Card = styled.div<{ $isReply?: boolean }>`
+  width: 100%;
+  padding: 15px;
+  margin-top: ${(props) => (props.$isReply ? "10px" : "20px")};
+  border-radius: 15px;
+  background-color: ${(props) => (props.$isReply ? "#2a2a2a" : "#333")};
+  border-left: ${(props) => (props.$isReply ? "3px solid #81c147" : "none")};
+  margin-left: ${(props) => (props.$isReply ? "20px" : "0")};
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
 export default function Clover({
   id,
   email,
@@ -73,6 +87,7 @@ export default function Clover({
   content,
   profileImage,
   createdAt,
+  isReply,
 }: IClover) {
   const API_URL = import.meta.env.VITE_API_URL;
   const [currentUser, setCurrentUser] = useState<string | null>(null);
@@ -131,27 +146,44 @@ export default function Clover({
     }
   };
 
-  return (
-    <Wrapper>
-      <Column
-        onClick={() => navigate(`/clovers/${id}`)}
-        style={{ cursor: "pointer" }}
-      >
+  if (isReply) {
+    // ✅ 댓글용 Card 스타일
+    return (
+      <Card $isReply>
         <UserInfo>
           <ProfileWrapper>
             {profileImage !== "Unknown" ? (
               <ProfileImg src={`${API_URL}${profileImage}`} alt="Profile" />
             ) : (
-              <ProfileSVG viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" />
+              <ProfileSVG viewBox="0 0 24 24">
+                <path d="..." />
               </ProfileSVG>
             )}
           </ProfileWrapper>
-          {nickname} (@{userId}) &nbsp;<span>{formatTime(createdAt)}</span>
+          {nickname} (@{userId}) • {formatTime(createdAt)}
         </UserInfo>
-
         <Payload>{content}</Payload>
+      </Card>
+    );
+  }
 
+  // ✅ 원글용 기존 Wrapper 레이아웃
+  return (
+    <Wrapper>
+      <Column onClick={() => navigate(`/clovers/${id}`)}>
+        <UserInfo>
+          <ProfileWrapper>
+            {profileImage !== "Unknown" ? (
+              <ProfileImg src={`${API_URL}${profileImage}`} alt="Profile" />
+            ) : (
+              <ProfileSVG viewBox="0 0 24 24">
+                <path d="..." />
+              </ProfileSVG>
+            )}
+          </ProfileWrapper>
+          {nickname} (@{userId}) • {formatTime(createdAt)}
+        </UserInfo>
+        <Payload>{content}</Payload>
         <CloverActions
           cloverId={Number(id)}
           currentUser={currentUser}
