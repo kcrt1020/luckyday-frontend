@@ -102,10 +102,6 @@ function App() {
   };
 
   useEffect(() => {
-    console.log(
-      "✅ GlobalStyles 적용 확인:",
-      document.body.style.backgroundColor
-    );
     init();
   }, []);
 

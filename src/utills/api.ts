@@ -22,13 +22,13 @@ export const apiRequest = async (
     ...(options.headers as Record<string, string>),
   };
 
-  console.log("🔍 API 요청 URL:", `${API_URL}${url}`);
-  console.log("🔍 API 요청 헤더:", headers);
+  // console.log("🔍 API 요청 URL:", `${API_URL}${url}`);
+  // console.log("🔍 API 요청 헤더:", headers);
 
   try {
     let response = await fetch(`${API_URL}${url}`, { ...options, headers });
 
-    console.log("🔍 응답 상태 코드:", response.status);
+    // console.log("🔍 응답 상태 코드:", response.status);
 
     if (isLogin) return response.json();
 

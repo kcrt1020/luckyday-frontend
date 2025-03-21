@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { format, addHours, getYear } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { IClover } from "./timeline";
+import CloverActions from "./CloverActions";
 
 const Wrapper = styled.div`
   display: grid;
@@ -63,21 +64,6 @@ const Payload = styled.p`
   text-align: left;
 `;
 
-const DeleteButton = styled.button`
-  background-color: tomato;
-  color: white;
-  font-weight: 600;
-  border: 0;
-  font-size: 14px;
-  padding: 3px 9px;
-  text-transform: uppercase;
-  border-radius: 5px;
-  cursor: pointer;
-  position: absolute;
-  top: 10px;
-  right: 10px;
-`;
-
 export default function Clover({
   id,
   email,
@@ -118,28 +104,6 @@ export default function Clover({
     fetchCurrentUser();
   }, []);
 
-  const onDelete = async () => {
-    const ok = confirm("트윗을 삭제하시겠습니까?");
-    if (!ok) return;
-
-    try {
-      const response = await fetch(`${API_URL}/api/clovers/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete clover");
-      }
-
-      window.location.reload();
-    } catch (error) {
-      console.error("Error deleting clover:", error);
-    }
-  };
-
   const formatTime = (createdAt: string) => {
     const formattedDateString = createdAt.replace(" ", "T");
     const utcDate = new Date(formattedDateString);
@@ -168,38 +132,35 @@ export default function Clover({
   };
 
   return (
-    <Wrapper onClick={() => navigate(`/clovers/${id}`)}>
-      {currentUser && currentUser === email && (
-        <DeleteButton
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-        >
-          X
-        </DeleteButton>
-      )}
-
-      <Column>
+    <Wrapper>
+      <Column
+        onClick={() => navigate(`/clovers/${id}`)}
+        style={{ cursor: "pointer" }}
+      >
         <UserInfo>
           <ProfileWrapper>
             {profileImage !== "Unknown" ? (
               <ProfileImg src={`${API_URL}${profileImage}`} alt="Profile" />
             ) : (
               <ProfileSVG viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z"></path>
+                <path d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" />
               </ProfileSVG>
             )}
           </ProfileWrapper>
           {nickname} (@{userId}) &nbsp;<span>{formatTime(createdAt)}</span>
         </UserInfo>
+
         <Payload>{content}</Payload>
+
+        <CloverActions
+          cloverId={Number(id)}
+          currentUser={currentUser}
+          authorEmail={email}
+        />
       </Column>
 
       <Column>
-        {imageUrl ? (
-          <Photo src={`${API_URL}${imageUrl}`} alt="Clover Image" />
-        ) : null}
+        {imageUrl && <Photo src={`${API_URL}${imageUrl}`} alt="Clover Image" />}
       </Column>
     </Wrapper>
   );
