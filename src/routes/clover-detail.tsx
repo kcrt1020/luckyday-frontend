@@ -24,6 +24,7 @@ const Wrapper = styled.div`
   border-radius: 15px;
   background-color: #222;
   color: white;
+  text-align: left;
   display: flex;
   flex-direction: column;
   gap: 15px;
@@ -76,6 +77,57 @@ const TimeStamp = styled.span`
   font-size: 14px;
   color: rgba(255, 255, 255, 0.7);
   text-align: right;
+`;
+
+const ReplyFormWrapper = styled.div`
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
+
+const ReplyInput = styled.textarea`
+  width: 100%;
+  padding: 20px;
+  border-radius: 20px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 16px;
+  background-color: black;
+  color: white;
+  resize: none;
+  border: 2px solid white;
+  &:focus {
+    outline: none;
+    border-color: #81c147;
+  }
+  &::placeholder {
+    color: #aaa;
+    font-size: 16px;
+  }
+`;
+
+const ReplyButtonWrapper = styled.div`
+  display: flex;
+  justify-content: flex-end;
+`;
+
+const ReplySubmitButton = styled.button`
+  padding: 10px 20px;
+  border-radius: 20px;
+  background-color: #81c147;
+  color: white;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  &:hover,
+  &:active {
+    opacity: 0.9;
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 `;
 
 export default function CloverDetail() {
@@ -136,6 +188,15 @@ export default function CloverDetail() {
     if (id) fetchReplies();
   }, [id]);
 
+  const fetchReplies = async () => {
+    try {
+      const data = await apiRequest(`/api/clovers/replies/${id}`);
+      setReplies(data);
+    } catch (e) {
+      console.error("❌ 댓글 불러오기 실패", e);
+    }
+  };
+
   // ✅ 댓글 등록
   const handleSubmitReply = async () => {
     if (!reply.trim()) return;
@@ -166,8 +227,8 @@ export default function CloverDetail() {
 
       if (!res.ok) throw new Error("댓글 등록 실패");
 
-      const newReply = await res.json();
-      setReplies((prev) => [newReply, ...prev]);
+      // 등록 후 목록 새로고침
+      await fetchReplies();
       setReply("");
     } catch (e) {
       console.error("❌ 댓글 등록 실패", e);
@@ -175,6 +236,10 @@ export default function CloverDetail() {
       setSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    if (id) fetchReplies();
+  }, [id]);
 
   // ✅ 시간 포맷
   const formatTime = (createdAt: string) => {
@@ -214,37 +279,19 @@ export default function CloverDetail() {
         <Image src={`${API_URL}${clover.imageUrl}`} alt="Clover" />
       )}
 
-      {/* 댓글 작성 */}
-      <div>
-        <textarea
+      <ReplyFormWrapper>
+        <ReplyInput
           rows={3}
           placeholder="댓글을 입력하세요..."
           value={reply}
           onChange={(e) => setReply(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "10px",
-            marginTop: "20px",
-            borderRadius: "10px",
-            fontSize: "15px",
-          }}
         />
-        <button
-          onClick={handleSubmitReply}
-          disabled={submitting}
-          style={{
-            marginTop: "10px",
-            padding: "8px 16px",
-            borderRadius: "8px",
-            backgroundColor: "#81c147",
-            border: "none",
-            color: "white",
-            cursor: "pointer",
-          }}
-        >
-          등록
-        </button>
-      </div>
+        <ReplyButtonWrapper>
+          <ReplySubmitButton onClick={handleSubmitReply} disabled={submitting}>
+            등록
+          </ReplySubmitButton>
+        </ReplyButtonWrapper>
+      </ReplyFormWrapper>
 
       <div style={{ marginTop: "30px" }}>
         {replies.map((reply) => (

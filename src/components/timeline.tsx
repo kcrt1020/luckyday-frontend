@@ -19,7 +19,6 @@ const Wrapper = styled.div`
   display: grid;
   gap: 20px;
   flex-direction: column;
-  background-color: #222;
 `;
 
 export default function Timeline({ userId }: { userId?: string }) {

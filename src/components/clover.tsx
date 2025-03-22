@@ -6,20 +6,19 @@ import { IClover } from "./timeline";
 import CloverActions from "./CloverActions";
 
 const Wrapper = styled.div`
-  display: grid;
-  grid-template-columns: 3fr 1fr;
+  display: flex;
+  flex-direction: column;
   padding: 20px;
   border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 15px;
-  position: relative;
+  background-color: #222;
   cursor: pointer;
   &:hover {
     outline: none;
     border-color: #81c147;
   }
+  gap: 15px;
 `;
-
-const Column = styled.div``;
 
 const ProfileWrapper = styled.div`
   width: 40px;
@@ -46,8 +45,9 @@ const ProfileSVG = styled.svg`
 `;
 
 const Photo = styled.img`
-  width: 100px;
-  height: 100px;
+  width: 100%;
+  max-height: 300px;
+  object-fit: cover;
   border-radius: 15px;
 `;
 
@@ -62,6 +62,10 @@ const Payload = styled.p`
   margin: 10px 0px;
   font-size: 18px;
   text-align: left;
+`;
+
+const ActionWrapper = styled.div`
+  width: 100%;
 `;
 
 const Card = styled.div<{ $isReply?: boolean }>`
@@ -147,7 +151,7 @@ export default function Clover({
   };
 
   if (isReply) {
-    // ✅ 댓글용 Card 스타일
+    // 댓글용 Card 스타일
     return (
       <Card $isReply>
         <UserInfo>
@@ -167,10 +171,11 @@ export default function Clover({
     );
   }
 
-  // ✅ 원글용 기존 Wrapper 레이아웃
+  // 원글용 기존 Wrapper 레이아웃
   return (
-    <Wrapper>
-      <Column onClick={() => navigate(`/clovers/${id}`)}>
+    <Wrapper onClick={() => navigate(`/clovers/${id}`)}>
+      {/* 유저 정보 + 글 */}
+      <div>
         <UserInfo>
           <ProfileWrapper>
             {profileImage !== "Unknown" ? (
@@ -184,16 +189,19 @@ export default function Clover({
           {nickname} (@{userId}) • {formatTime(createdAt)}
         </UserInfo>
         <Payload>{content}</Payload>
+      </div>
+
+      {/* 이미지가 있을 경우에만 렌더링 */}
+      {imageUrl && <Photo src={`${API_URL}${imageUrl}`} alt="Clover Image" />}
+
+      {/* 액션 버튼 (댓글, 좋아요 등) */}
+      <ActionWrapper onClick={(e) => e.stopPropagation()}>
         <CloverActions
           cloverId={Number(id)}
           currentUser={currentUser}
           authorEmail={email}
         />
-      </Column>
-
-      <Column>
-        {imageUrl && <Photo src={`${API_URL}${imageUrl}`} alt="Clover Image" />}
-      </Column>
+      </ActionWrapper>
     </Wrapper>
   );
 }

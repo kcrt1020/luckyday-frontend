@@ -31,6 +31,22 @@ const ActionItem = styled.button<{ $alignRight?: boolean }>`
   }
 `;
 
+const ReplySubmitButton = styled.button`
+  margin-top: 10px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background-color: #81c147;
+  border: none;
+  color: white;
+  cursor: pointer;
+`;
+
+const ReplyButtonWrapper = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+`;
+
 const pop = keyframes`
   0% { transform: scale(1); }
   50% { transform: scale(1.4); }
@@ -54,12 +70,25 @@ const SlideDown = styled.div<{ $show: boolean }>`
 
 const ReplyInput = styled.textarea`
   width: 100%;
-  padding: 10px;
-  border-radius: 10px;
+  padding: 20px;
+  border-radius: 20px;
   margin-top: 10px;
-  border: 1px solid #ccc;
+  border: 2px solid white;
   resize: none;
-  font-size: 15px;
+  font-size: 16px;
+  background-color: black;
+  color: white;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+
+  &::placeholder {
+    font-size: 16px;
+    color: #aaa;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #81c147;
+  }
 `;
 
 interface CloverActionsProps {
@@ -185,7 +214,7 @@ export default function CloverActions({
     <div onClick={(e) => e.stopPropagation()}>
       <ActionBar>
         <ActionItem onClick={toggleReply}>
-          💬 댓글 ({replies.length})
+          💬 {replies.length > 0 && `${replies.length}`}
         </ActionItem>
 
         <ActionItem onClick={toggleLike}>
@@ -207,20 +236,9 @@ export default function CloverActions({
           value={reply}
           onChange={(e) => setReply(e.target.value)}
         />
-        <ActionItem onClick={onSubmitReply}>등록</ActionItem>
-
-        {replies.map((r) => (
-          <div
-            key={r.id}
-            style={{
-              marginTop: "10px",
-              paddingLeft: "10px",
-              borderLeft: "2px solid #81c147",
-            }}
-          >
-            <strong>@{r.userId ?? "unknown"}</strong> {r.content}
-          </div>
-        ))}
+        <ReplyButtonWrapper>
+          <ReplySubmitButton onClick={onSubmitReply}>등록</ReplySubmitButton>
+        </ReplyButtonWrapper>
       </SlideDown>
     </div>
   );
