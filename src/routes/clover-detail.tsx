@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { format, addHours } from "date-fns";
@@ -188,14 +188,14 @@ export default function CloverDetail() {
     if (id) fetchReplies();
   }, [id]);
 
-  const fetchReplies = async () => {
+  const fetchReplies = useCallback(async () => {
     try {
       const data = await apiRequest(`/api/clovers/replies/${id}`);
       setReplies(data);
     } catch (e) {
       console.error("❌ 댓글 불러오기 실패", e);
     }
-  };
+  }, [id]);
 
   // ✅ 댓글 등록
   const handleSubmitReply = async () => {
@@ -239,7 +239,7 @@ export default function CloverDetail() {
 
   useEffect(() => {
     if (id) fetchReplies();
-  }, [id]);
+  }, [id, fetchReplies]);
 
   // ✅ 시간 포맷
   const formatTime = (createdAt: string) => {

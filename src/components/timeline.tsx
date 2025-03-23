@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import styled from "styled-components";
+import { useEffect, useState, useRef, useCallback } from "react";
+import styled, { keyframes } from "styled-components";
 import Clover from "./clover";
 import { apiRequest } from "../utills/api";
 
@@ -18,12 +18,54 @@ export interface IClover {
 const Wrapper = styled.div`
   display: grid;
   gap: 20px;
+  width: 700px;
   flex-direction: column;
+`;
+
+const spin = keyframes`
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+`;
+
+const fadeInUp = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
+const Spinner = styled.div`
+  margin: 20px auto;
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-top: 4px solid #81c147;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: ${spin} 1s linear infinite;
+`;
+
+const FinishedMessage = styled.div`
+  text-align: center;
+  color: #81c147;
+  margin-top: 20px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  animation: ${fadeInUp} 0.6s ease-out;
+  transition: all 0.3s ease;
 `;
 
 export default function Timeline({ userId }: { userId?: string }) {
   const [clovers, setClovers] = useState<IClover[]>([]);
   const [isReady, setIsReady] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(5);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
     setIsReady(true);
@@ -34,16 +76,10 @@ export default function Timeline({ userId }: { userId?: string }) {
 
     const loadClovers = async () => {
       try {
-        let url = "/api/clovers"; // 기본적으로 전체 클로버 가져옴
+        let url = "/api/clovers";
+        if (userId) url = `/api/clovers/user/${userId}`;
 
-        if (userId) {
-          url = `/api/clovers/user/${userId}`; // ✅ 특정 유저의 클로버만 가져오는 API 사용
-        }
-
-        const data: IClover[] | null = await apiRequest(url, {
-          method: "GET",
-        });
-
+        const data: IClover[] | null = await apiRequest(url, { method: "GET" });
         if (data) {
           setClovers(data);
         }
@@ -53,17 +89,61 @@ export default function Timeline({ userId }: { userId?: string }) {
     };
 
     loadClovers();
+
     const interval = setInterval(loadClovers, 5000);
     return () => clearInterval(interval);
   }, [isReady, userId]);
 
+  const observeLastItem = useCallback((node: HTMLDivElement | null) => {
+    if (observerRef.current) observerRef.current.disconnect();
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          console.log("✅ 마지막 아이템 화면에 보임! → visibleCount 증가");
+          setIsLoadingMore(true);
+          setTimeout(() => {
+            setVisibleCount((prev) => prev + 5);
+            setIsLoadingMore(false);
+          }, 500);
+        }
+      },
+      {
+        root: null,
+        rootMargin: "0px",
+        threshold: 1.0,
+      }
+    );
+
+    if (node) observerRef.current.observe(node);
+  }, []);
+
+  const visibleClovers = clovers.slice(0, visibleCount);
+
   return (
-    <Wrapper>
-      {clovers.length > 0 ? (
-        clovers.map((clover) => <Clover key={clover.id} {...clover} />)
-      ) : (
-        <p>클로버가 없습니다.</p>
-      )}
-    </Wrapper>
+    <>
+      <Wrapper>
+        {visibleClovers.length > 0 ? (
+          visibleClovers.map((clover, index) => {
+            const isLast = index === visibleClovers.length - 1;
+            return (
+              <div key={clover.id} ref={isLast ? observeLastItem : null}>
+                <Clover {...clover} />
+              </div>
+            );
+          })
+        ) : (
+          <p>클로버가 없습니다.</p>
+        )}
+      </Wrapper>
+
+      {isLoadingMore && <Spinner />}
+
+      {!isLoadingMore &&
+        visibleCount >= clovers.length &&
+        clovers.length > 0 && (
+          <FinishedMessage>오늘의 클로버는 여기까지 ✨</FinishedMessage>
+        )}
+    </>
   );
 }
