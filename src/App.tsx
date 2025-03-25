@@ -45,6 +45,10 @@ const router = createBrowserRouter([
     children: [
       {
         path: "",
+        element: <Profile />, // ✅ 내 프로필
+      },
+      {
+        path: ":userId", // ✅ 다른 사람 프로필
         element: <Profile />,
       },
     ],

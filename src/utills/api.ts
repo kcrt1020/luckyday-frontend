@@ -14,16 +14,17 @@ export const apiRequest = async (
   const token = localStorage.getItem("accessToken");
 
   const headers: Record<string, string> = {
-    ...(token ? { Authorization: `Bearer ${token}` } : {}), // ✅ JWT 토큰 추가
-    ...((!isMultipart && { "Content-Type": "application/json" }) as Record<
-      string,
-      string
-    >), // ✅ 파일 업로드 시 Content-Type을 설정하지 않도록 처리
-    ...(options.headers as Record<string, string>),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(!isMultipart ? { "Content-Type": "application/json" } : {}),
+    ...(options.headers &&
+    typeof options.headers === "object" &&
+    !Array.isArray(options.headers)
+      ? (options.headers as Record<string, string>)
+      : {}),
   };
 
   // console.log("🔍 API 요청 URL:", `${API_URL}${url}`);
-  // console.log("🔍 API 요청 헤더:", headers);
+  console.log("🔍 API 요청 헤더:", headers);
 
   try {
     let response = await fetch(`${API_URL}${url}`, { ...options, headers });
@@ -56,7 +57,10 @@ export const apiRequest = async (
       }
     }
 
-    return response.ok ? response.json() : null;
+    if (response.ok) {
+      const text = await response.text();
+      return text ? JSON.parse(text) : null;
+    }
   } catch (error) {
     console.error("🚨 API 요청 중 오류 발생:", error);
     return null;

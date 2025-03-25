@@ -95,12 +95,14 @@ interface CloverActionsProps {
   cloverId: number;
   currentUser: string | null;
   authorEmail: string;
+  disableCommentToggle?: boolean;
 }
 
 export default function CloverActions({
   cloverId,
   currentUser,
   authorEmail,
+  disableCommentToggle,
 }: CloverActionsProps) {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
@@ -213,7 +215,7 @@ export default function CloverActions({
   return (
     <div onClick={(e) => e.stopPropagation()}>
       <ActionBar>
-        <ActionItem onClick={toggleReply}>
+        <ActionItem onClick={!disableCommentToggle ? toggleReply : undefined}>
           💬 {replies.length > 0 && `${replies.length}`}
         </ActionItem>
 

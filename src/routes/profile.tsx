@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { apiRequest } from "../utills/api";
 import Timeline from "../components/timeline";
+import FollowButton from "../components/FollowButton";
+import { useParams } from "react-router-dom";
 
 interface IProfile {
   nickname: string;
@@ -11,21 +13,21 @@ interface IProfile {
   website?: string | null;
   userId: string;
   email: string;
-  birth_date?: string | null;
+  birthDate?: string | null;
 }
 
 const Wrapper = styled.div`
   display: flex;
-  align-items: center;
   flex-direction: column;
-  gap: 40px;
-  overflow-y: scroll;
-  height: 80vh;
+  align-items: center;
+  gap: 30px;
+  width: 700px;
+  margin: 40px auto;
 `;
 
 const ProfileUpload = styled.label`
-  width: 80px;
-  height: 80px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   background-color: #ccc;
   cursor: pointer;
@@ -33,12 +35,17 @@ const ProfileUpload = styled.label`
   justify-content: center;
   align-items: center;
   overflow: hidden;
-  min-width: 80px;
-  min-height: 80px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s;
+
+  &:hover {
+    transform: scale(1.05);
+  }
 
   svg {
     width: 50px;
     height: 50px;
+    color: #fff;
   }
 `;
 
@@ -53,7 +60,7 @@ const ProfileInput = styled.input`
 `;
 
 const Name = styled.span`
-  font-size: 22px;
+  font-size: 24px;
   font-weight: bold;
 `;
 
@@ -61,12 +68,121 @@ const Bio = styled.p`
   font-size: 16px;
   text-align: center;
   max-width: 80%;
+  line-height: 1.5;
 `;
 
 const ExtraInfo = styled.div`
   font-size: 14px;
-  color: grey;
   text-align: center;
+  line-height: 1.6;
+
+  p {
+    margin: 4px 0;
+  }
+
+  a {
+    color: #81c147;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+`;
+
+const InputRow = styled.div`
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+`;
+
+const InputGroup = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+`;
+
+const StyledInput = styled.input`
+  border: none;
+  border-bottom: 1px solid #ccc;
+  font-size: 16px;
+  padding: 4px;
+  background: transparent;
+  color: inherit;
+  text-align: center;
+
+  &::placeholder {
+    color: #aaa;
+  }
+
+  &:focus {
+    border-color: #81c147;
+    outline: none;
+  }
+`;
+
+export const StyledTextArea = styled.textarea`
+  border: none;
+  border-bottom: 1px solid #ccc;
+  padding: 4px;
+  font-size: 16px;
+  background: transparent;
+  color: inherit;
+  resize: none;
+  text-align: center;
+  line-height: 1.5;
+
+  &::placeholder {
+    color: #aaa;
+  }
+
+  &:focus {
+    border-color: #81c147;
+    outline: none;
+  }
+`;
+
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 10px;
+`;
+
+const Button = styled.button<{ $secondary?: boolean }>`
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  background-color: ${(props) => (props.$secondary ? "#f0f0f0" : "#81c147")};
+  color: ${(props) => (props.$secondary ? "#333" : "white")};
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    opacity: 0.9;
+  }
+`;
+
+const StyledDateInput = styled.input`
+  border: none;
+  border-bottom: 1px solid #ccc;
+  padding: 6px 8px;
+  font-size: 16px;
+  background: transparent;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+
+  &::-webkit-calendar-picker-indicator {
+    filter: invert(43%) sepia(58%) saturate(486%) hue-rotate(63deg)
+      brightness(92%) contrast(91%);
+    cursor: pointer;
+  }
+
+  &:focus {
+    border-color: #81c147;
+    outline: none;
+  }
 `;
 
 export default function Profile() {
@@ -77,28 +193,64 @@ export default function Profile() {
     location: null,
     website: null,
     email: "",
-    userId: "No ID",
-    birth_date: null,
+    userId: "",
+    birthDate: null,
   });
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [showSavedMessage, setShowSavedMessage] = useState(false);
+  const [editProfile, setEditProfile] = useState({
+    nickname: "",
+    userId: "",
+    bio: "",
+    location: "",
+    website: "",
+    birthDate: "",
+  });
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  const { userId } = useParams();
+  const isOwnProfile = currentUserId && userId === currentUserId;
 
   useEffect(() => {
     fetchProfile();
+  }, [userId]);
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const data = await apiRequest("/api/user/me"); // 이메일 아닌 userId 리턴해야 함
+        setCurrentUserId(data.userId); // ✅ userId 기준으로
+      } catch (error) {
+        console.error("❌ 로그인 유저 정보 가져오기 실패:", error);
+      }
+    };
+
+    fetchCurrentUser();
   }, []);
 
   const fetchProfile = async () => {
     try {
-      console.log("🚀 Fetching profile...");
-      const response = await apiRequest("/api/profile/me");
+      console.log("📡 fetching profile with userId:", userId); // 👈 추가
+      const response = await apiRequest(`/api/profile/${userId}`);
       if (response) {
-        console.log("✅ Profile fetched successfully:", response);
         setProfile({
           ...response,
-          nickname: response.nickname || "Anonymous",
-          userId: response.userId || "No ID",
-          bio: response.bio || "소개가 없습니다.",
-          location: response.location || "위치 정보 없음",
-          website: response.website || "웹사이트 없음",
-          birth_date: response.birth_date || "생년월일 정보 없음",
+          nickname: response.nickname ?? "Anonymous",
+          userId: response.userId ?? "",
+          bio: response.bio ?? "",
+          location: response.location ?? "",
+          website: response.website ?? "",
+          birthDate: response.birthDate ?? "",
+        });
+
+        setEditProfile({
+          nickname: response.nickname ?? "",
+          userId: response.userId ?? "",
+          bio: response.bio ?? "",
+          location: response.location ?? "",
+          website: response.website ?? "",
+          birthDate: response.birthDate ?? "",
         });
       }
     } catch (error) {
@@ -113,8 +265,6 @@ export default function Profile() {
     const formData = new FormData();
     formData.append("profileImage", files[0]);
 
-    console.log([...formData]); // FormData 확인용
-
     try {
       const response = await apiRequest(
         "/api/profile/avatar",
@@ -124,7 +274,7 @@ export default function Profile() {
         },
         false,
         true
-      ); // ✅ isMultipart = true 추가
+      );
 
       if (!response) throw new Error("Failed to upload");
 
@@ -137,16 +287,71 @@ export default function Profile() {
     }
   };
 
+  const handleEditChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditProfile((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSaveProfile = async () => {
+    const profileToSave = {
+      ...editProfile,
+      // 👇 그냥 원래 형식 유지 (input[type=date]에서 이미 YYYY-MM-DD로 들어옴)
+      birthDate: editProfile.birthDate || null,
+    };
+
+    console.log("📦 최종 전송 데이터:", profileToSave);
+
+    try {
+      const response = await apiRequest(
+        "/api/profile/update",
+        {
+          method: "PUT",
+          body: JSON.stringify(profileToSave),
+          headers: {},
+        },
+        false,
+        false
+      );
+
+      console.log("🟢 응답:", response);
+
+      if (response) {
+        setProfile((prev) => ({
+          ...prev,
+          ...editProfile,
+          birthDate: editProfile.birthDate,
+          profileImage: prev.profileImage,
+          email: prev.email,
+        }));
+        setIsEditing(false);
+        setShowSavedMessage(true);
+        setTimeout(() => setShowSavedMessage(false), 2000);
+      } else {
+        console.log("❌ 저장 실패, 서버 응답 없음");
+      }
+    } catch (error) {
+      console.error("🔥 저장 중 오류:", error);
+    }
+  };
+
   const API_URL = import.meta.env.VITE_API_URL;
 
   return (
     <Wrapper>
+      {showSavedMessage && (
+        <p style={{ color: "#81c147" }}>✅ 프로필이 저장되었습니다!</p>
+      )}
       <ProfileUpload htmlFor="profile">
         {profile.profileImage ? (
           <ProfileImg
-            src={`${API_URL}${profile.profileImage}`} // 업로드된 이미지 URL 생성
+            src={`${API_URL}${profile.profileImage}`}
             alt="User Profile"
-            onError={(e) => (e.currentTarget.style.display = "none")} // 이미지 로드 실패 시 숨김
+            onError={(e) => (e.currentTarget.style.display = "none")}
           />
         ) : (
           <svg
@@ -169,32 +374,104 @@ export default function Profile() {
         type="file"
         accept="image/*"
       />
-      <Name>
-        {profile.nickname} (@{profile.userId})
-      </Name>
 
-      <Bio>{profile.bio}</Bio>
+      {isEditing ? (
+        <InputRow>
+          <InputGroup>
+            <StyledInput
+              name="nickname"
+              value={editProfile.nickname}
+              onChange={handleEditChange}
+              placeholder="닉네임"
+            />
+          </InputGroup>
+          <InputGroup>
+            <StyledInput
+              name="userId"
+              value={editProfile.userId}
+              onChange={handleEditChange}
+              placeholder="아이디"
+            />
+          </InputGroup>
+        </InputRow>
+      ) : (
+        <Name>
+          {profile.nickname} (@{profile.userId})
+        </Name>
+      )}
+
+      {isEditing ? (
+        <StyledTextArea
+          name="bio"
+          value={editProfile.bio}
+          onChange={handleEditChange}
+          placeholder="자기소개"
+        />
+      ) : (
+        <Bio>{profile.bio}</Bio>
+      )}
 
       <ExtraInfo>
-        <p>📍 {profile.location}</p>
-        <p>
-          🌐{" "}
-          {profile.website && profile.website !== "웹사이트 없음" ? (
-            <a
-              href={profile.website || ""}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {profile.website}
-            </a>
-          ) : (
-            "웹사이트 없음"
-          )}
-        </p>
-        <p>🎂 {profile.birth_date}</p>
+        {isEditing ? (
+          <>
+            <StyledInput
+              name="location"
+              value={editProfile.location}
+              onChange={handleEditChange}
+              placeholder="위치"
+            />
+            <StyledInput
+              name="website"
+              value={editProfile.website}
+              onChange={handleEditChange}
+              placeholder="웹사이트"
+            />
+            <StyledDateInput
+              name="birthDate"
+              type="date"
+              value={editProfile.birthDate}
+              onChange={handleEditChange}
+            />
+          </>
+        ) : (
+          <>
+            <p>📍 {profile.location}</p>
+            <p>
+              🌐{" "}
+              {profile.website && profile.website !== "웹사이트 없음" ? (
+                <a
+                  href={profile.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {profile.website}
+                </a>
+              ) : (
+                "웹사이트 없음"
+              )}
+            </p>
+            <p>🎂 {profile.birthDate}</p>
+          </>
+        )}
       </ExtraInfo>
 
-      {/* ✅ 타임라인 컴포넌트 추가 */}
+      {isOwnProfile && (
+        <ButtonGroup>
+          {isEditing ? (
+            <>
+              <Button onClick={handleSaveProfile}>저장</Button>
+              <Button $secondary onClick={() => setIsEditing(false)}>
+                취소
+              </Button>
+            </>
+          ) : (
+            <Button onClick={() => setIsEditing(true)}>프로필 수정</Button>
+          )}
+        </ButtonGroup>
+      )}
+
+      {!isOwnProfile && <FollowButton targetUserId={profile.userId} />}
+
       <Timeline userId={profile.userId} />
     </Wrapper>
   );

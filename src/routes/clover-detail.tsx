@@ -4,6 +4,7 @@ import styled from "styled-components";
 import { format, addHours } from "date-fns";
 import Clover from "../components/clover";
 import { apiRequest } from "../utills/api";
+import CloverActions from "../components/CloverActions";
 
 interface Clover {
   id: string;
@@ -130,6 +131,10 @@ const ReplySubmitButton = styled.button`
   }
 `;
 
+const ActionWrapper = styled.div`
+  width: 100%;
+`;
+
 export default function CloverDetail() {
   const { id } = useParams();
   const API_URL = import.meta.env.VITE_API_URL;
@@ -141,6 +146,8 @@ export default function CloverDetail() {
   const [replies, setReplies] = useState<Clover[]>([]);
   const [reply, setReply] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  const [currentUser, setCurrentUser] = useState<string | null>(null);
 
   // ✅ 원글 조회
   useEffect(() => {
@@ -248,6 +255,32 @@ export default function CloverDetail() {
     return format(kstDate, "yyyy년 MM월 dd일 HH:mm");
   };
 
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        if (!token) {
+          console.warn("🚨 로그인된 유저 정보 없음");
+          return;
+        }
+
+        const response = await fetch(`${API_URL}/api/user/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!response.ok)
+          throw new Error("🚨 로그인된 유저 정보 가져오기 실패");
+
+        const data = await response.json();
+        setCurrentUser(data.email);
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+
+    fetchCurrentUser();
+  }, [API_URL]);
+
   if (loading) return <Wrapper>Loading...</Wrapper>;
   if (!clover) return <Wrapper>클로버 정보를 불러올 수 없습니다.</Wrapper>;
 
@@ -278,6 +311,16 @@ export default function CloverDetail() {
       {clover.imageUrl && (
         <Image src={`${API_URL}${clover.imageUrl}`} alt="Clover" />
       )}
+
+      {/* 액션 버튼 (댓글, 좋아요 등) */}
+      <ActionWrapper onClick={(e) => e.stopPropagation()}>
+        <CloverActions
+          cloverId={Number(id)}
+          currentUser={currentUser}
+          authorEmail={clover.email}
+          disableCommentToggle
+        />
+      </ActionWrapper>
 
       <ReplyFormWrapper>
         <ReplyInput

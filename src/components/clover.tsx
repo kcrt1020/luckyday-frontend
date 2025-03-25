@@ -150,6 +150,10 @@ export default function Clover({
     }
   };
 
+  const handleProfileClick = () => {
+    navigate(`/profile/${userId}`);
+  };
+
   if (isReply) {
     // 댓글용 Card 스타일
     return (
@@ -157,7 +161,14 @@ export default function Clover({
         <UserInfo>
           <ProfileWrapper>
             {profileImage !== "Unknown" ? (
-              <ProfileImg src={`${API_URL}${profileImage}`} alt="Profile" />
+              <ProfileImg
+                src={`${API_URL}${profileImage}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleProfileClick();
+                }}
+                alt="Profile"
+              />
             ) : (
               <ProfileSVG viewBox="0 0 24 24">
                 <svg
@@ -190,7 +201,14 @@ export default function Clover({
         <UserInfo>
           <ProfileWrapper>
             {profileImage !== "Unknown" ? (
-              <ProfileImg src={`${API_URL}${profileImage}`} alt="Profile" />
+              <ProfileImg
+                src={`${API_URL}${profileImage}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleProfileClick();
+                }}
+                alt="Profile"
+              />
             ) : (
               <ProfileSVG viewBox="0 0 24 24">
                 <svg
