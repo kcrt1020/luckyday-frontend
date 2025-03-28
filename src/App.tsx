@@ -12,6 +12,7 @@ import CreateAccount from "./routes/create-account";
 import Profile from "./routes/profile";
 import CloverDetail from "./routes/clover-detail";
 import FollowListPage from "./routes/FollowListPage";
+import Search from "./routes/Search";
 
 const router = createBrowserRouter([
   {
@@ -75,6 +76,20 @@ const router = createBrowserRouter([
       {
         path: "",
         element: <FollowListPage />,
+      },
+    ],
+  },
+  {
+    path: "/search",
+    element: (
+      <ProtectedRoute>
+        <Layout />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        path: "",
+        element: <Search />,
       },
     ],
   },

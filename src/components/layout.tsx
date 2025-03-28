@@ -41,6 +41,33 @@ const MenuItem = styled.div`
   }
 `;
 
+const SearchBarWrapper = styled.div`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 10px 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  justify-content: center;
+  border-top: 1px solid #ccc;
+  z-index: 1000;
+`;
+
+const SearchInput = styled.input`
+  width: 90%;
+  max-width: 500px;
+  padding: 0.8rem 1rem;
+  font-size: 1rem;
+  border: 2px solid #81c147;
+  border-radius: 10px;
+  outline: none;
+
+  &:focus {
+    border-color: #5b9b2d;
+  }
+`;
+
 const Content = styled.div`
   width: 100%;
   height: 100%;
@@ -108,6 +135,15 @@ export default function Layout() {
     fetchCurrentUser();
   }, []);
 
+  const [searchKeyword, setSearchKeyword] = useState("");
+
+  const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && searchKeyword.trim()) {
+      navigate(`/search?keyword=${encodeURIComponent(searchKeyword.trim())}`);
+      setSearchKeyword(""); // 입력값 초기화
+    }
+  };
+
   return (
     <Wrapper>
       <Menu>
@@ -169,6 +205,15 @@ export default function Layout() {
       <Content>
         <Outlet />
       </Content>
+      <SearchBarWrapper>
+        <SearchInput
+          type="text"
+          placeholder="검색어를 입력하세요"
+          value={searchKeyword}
+          onChange={(e) => setSearchKeyword(e.target.value)}
+          onKeyDown={handleSearch}
+        />
+      </SearchBarWrapper>
     </Wrapper>
   );
 }
