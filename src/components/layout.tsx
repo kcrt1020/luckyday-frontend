@@ -1,5 +1,7 @@
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { apiRequest } from "../utills/api";
+import { useEffect, useState } from "react";
 
 const Wrapper = styled.div`
   display: grid;
@@ -9,7 +11,7 @@ const Wrapper = styled.div`
   padding: 50px 0px;
   width: 100%;
   max-width: 860px;
-  background-color: inherit; // ✅ 부모(body)의 배경색을 따라가도록 설정
+  background-color: inherit;
 `;
 
 const Menu = styled.div`
@@ -53,7 +55,7 @@ export default function Layout() {
     if (!ok) return;
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL; // ✅ 환경변수에서 API URL 가져오기
+      const API_URL = import.meta.env.VITE_API_URL;
       const accessToken = localStorage.getItem("accessToken");
       const refreshToken = localStorage.getItem("refreshToken");
 
@@ -90,6 +92,22 @@ export default function Layout() {
     }
   };
 
+  const [userId, setUserId] = useState<string | null>(null); // 로그인 유저 ID 상태
+
+  // 🔍 로그인 유저 정보 가져오기
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const data = await apiRequest("/api/user/me"); // 로그인된 유저 정보
+        setUserId(data.userId); // ✅ userId 저장
+      } catch (error) {
+        console.error("❌ 로그인 유저 정보 가져오기 실패:", error);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
+
   return (
     <Wrapper>
       <Menu>
@@ -110,7 +128,7 @@ export default function Layout() {
             </svg>
           </MenuItem>
         </Link>
-        <Link to="/profile">
+        <Link to={`/profile/${userId}`}>
           <MenuItem>
             <svg
               data-slot="icon"

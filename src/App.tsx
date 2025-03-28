@@ -11,6 +11,7 @@ import styled, { createGlobalStyle } from "styled-components";
 import CreateAccount from "./routes/create-account";
 import Profile from "./routes/profile";
 import CloverDetail from "./routes/clover-detail";
+import FollowListPage from "./routes/FollowListPage";
 
 const router = createBrowserRouter([
   {
@@ -44,11 +45,7 @@ const router = createBrowserRouter([
     ),
     children: [
       {
-        path: "",
-        element: <Profile />, // ✅ 내 프로필
-      },
-      {
-        path: ":userId", // ✅ 다른 사람 프로필
+        path: ":userId",
         element: <Profile />,
       },
     ],
@@ -64,6 +61,20 @@ const router = createBrowserRouter([
       {
         path: "",
         element: <CloverDetail />,
+      },
+    ],
+  },
+  {
+    path: "/profile/:type/:userId",
+    element: (
+      <ProtectedRoute>
+        <Layout />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        path: "",
+        element: <FollowListPage />,
       },
     ],
   },

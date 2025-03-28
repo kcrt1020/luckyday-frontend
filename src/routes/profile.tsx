@@ -4,6 +4,7 @@ import { apiRequest } from "../utills/api";
 import Timeline from "../components/timeline";
 import FollowButton from "../components/FollowButton";
 import { useParams } from "react-router-dom";
+import { useCurrentUser } from "../hooks/useCurrentUser";
 
 interface IProfile {
   nickname: string;
@@ -207,31 +208,18 @@ export default function Profile() {
     website: "",
     birthDate: "",
   });
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const { userId } = useParams();
-  const isOwnProfile = currentUserId && userId === currentUserId;
 
   useEffect(() => {
     fetchProfile();
   }, [userId]);
 
-  useEffect(() => {
-    const fetchCurrentUser = async () => {
-      try {
-        const data = await apiRequest("/api/user/me"); // 이메일 아닌 userId 리턴해야 함
-        setCurrentUserId(data.userId); // ✅ userId 기준으로
-      } catch (error) {
-        console.error("❌ 로그인 유저 정보 가져오기 실패:", error);
-      }
-    };
-
-    fetchCurrentUser();
-  }, []);
+  const currentUser = useCurrentUser();
+  const isOwnProfile = currentUser?.userId && userId === currentUser.userId;
 
   const fetchProfile = async () => {
     try {
-      console.log("📡 fetching profile with userId:", userId); // 👈 추가
       const response = await apiRequest(`/api/profile/${userId}`);
       if (response) {
         setProfile({
@@ -300,7 +288,6 @@ export default function Profile() {
   const handleSaveProfile = async () => {
     const profileToSave = {
       ...editProfile,
-      // 👇 그냥 원래 형식 유지 (input[type=date]에서 이미 YYYY-MM-DD로 들어옴)
       birthDate: editProfile.birthDate || null,
     };
 
