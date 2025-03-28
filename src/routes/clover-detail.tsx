@@ -9,7 +9,7 @@ import CloverActions from "../components/CloverActions";
 interface Clover {
   id: string;
   email: string;
-  userId: string;
+  username: string;
   nickname: string;
   imageUrl?: string;
   content: string;
@@ -301,7 +301,7 @@ export default function CloverDetail() {
           )}
         </ProfileWrapper>
         <div>
-          {clover.nickname} (@{clover.userId}) &nbsp;
+          {clover.nickname} (@{clover.username}) &nbsp;
           <TimeStamp>{formatTime(clover.createdAt)}</TimeStamp>
         </div>
       </UserInfo>

@@ -1,6 +1,12 @@
 import styled from "styled-components";
 import { useEffect, useState } from "react";
-import { format, addHours, getYear } from "date-fns";
+import {
+  format,
+  parse,
+  differenceInMinutes,
+  differenceInHours,
+  getYear,
+} from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { IClover } from "./timeline";
 import CloverActions from "./CloverActions";
@@ -85,7 +91,7 @@ const Card = styled.div<{ $isReply?: boolean }>`
 export default function Clover({
   id,
   email,
-  userId,
+  username,
   nickname,
   imageUrl,
   content,
@@ -124,25 +130,32 @@ export default function Clover({
   }, [API_URL]);
 
   const formatTime = (createdAt: string) => {
-    const formattedDateString = createdAt.replace(" ", "T");
-    const utcDate = new Date(formattedDateString);
+    // 소수점 3자리까지만 유지 (밀리초 단위로 처리)
+    const sanitizedCreatedAt = createdAt
+      .replace(" ", "T")
+      .replace(/(\.\d{3})\d+$/, "$1");
 
-    if (isNaN(utcDate.getTime())) {
+    const kstDate = parse(
+      sanitizedCreatedAt,
+      "yyyy-MM-dd'T'HH:mm:ss.SSS",
+      new Date()
+    );
+
+    if (isNaN(kstDate.getTime())) {
       console.error("🚨 Invalid Date Format:", createdAt);
       return "알 수 없음";
     }
 
-    const kstDate = addHours(utcDate, 9);
     const now = new Date();
-    const diffInMinutes = (now.getTime() - kstDate.getTime()) / (1000 * 60);
-    const diffInHours = diffInMinutes / 60;
+    const diffInMinutes = differenceInMinutes(now, kstDate);
+    const diffInHours = differenceInHours(now, kstDate);
     const currentYear = getYear(now);
     const createdYear = getYear(kstDate);
 
     if (diffInMinutes < 60) {
-      return `${Math.floor(diffInMinutes)}분`;
+      return `${diffInMinutes}분`;
     } else if (diffInHours < 24) {
-      return `${Math.floor(diffInHours)}시간`;
+      return `${diffInHours}시간`;
     } else {
       return createdYear === currentYear
         ? format(kstDate, "MM월 dd일")
@@ -151,7 +164,7 @@ export default function Clover({
   };
 
   const handleProfileClick = () => {
-    navigate(`/profile/${userId}`);
+    navigate(`/profile/${username}`);
   };
 
   if (isReply) {
@@ -186,7 +199,7 @@ export default function Clover({
               </ProfileSVG>
             )}
           </ProfileWrapper>
-          {nickname} (@{userId}) • {formatTime(createdAt)}
+          {nickname} (@{username}) • {formatTime(createdAt)}
         </UserInfo>
         <Payload>{content}</Payload>
       </Card>
@@ -226,7 +239,7 @@ export default function Clover({
               </ProfileSVG>
             )}
           </ProfileWrapper>
-          {nickname} (@{userId}) • {formatTime(createdAt)}
+          {nickname} (@{username}) • {formatTime(createdAt)}
         </UserInfo>
         <Payload>{content}</Payload>
       </div>

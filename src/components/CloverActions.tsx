@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { IClover } from "./timeline";
 import { apiRequest } from "../utills/api";
 
-const API_URL = import.meta.env.VITE_API_URL; // ✅ 추가
+const API_URL = import.meta.env.VITE_API_URL;
 
 const ActionBar = styled.div`
   display: flex;

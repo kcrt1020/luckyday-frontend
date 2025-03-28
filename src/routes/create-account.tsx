@@ -12,7 +12,7 @@ import {
 export default function CreateAccount() {
   const navigate = useNavigate();
   const [isLoading, setLoading] = useState(false);
-  const [userId, setUserId] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [nickname, setNickname] = useState("");
   const [password, setPassword] = useState("");
@@ -20,8 +20,8 @@ export default function CreateAccount() {
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    if (name === "userId") {
-      setUserId(value);
+    if (name === "username") {
+      setUsername(value);
     } else if (name === "email") {
       setEmail(value);
     } else if (name === "nickname") {
@@ -36,7 +36,7 @@ export default function CreateAccount() {
     setError("");
     if (
       isLoading ||
-      userId === "" ||
+      username === "" ||
       email === "" ||
       nickname === "" ||
       password === ""
@@ -53,7 +53,7 @@ export default function CreateAccount() {
           "Content-Type": "application/json",
         },
         credentials: "include", // ✅ 추가
-        body: JSON.stringify({ userId, email, nickname, password }),
+        body: JSON.stringify({ username, email, nickname, password }),
       });
 
       let data;
@@ -85,8 +85,8 @@ export default function CreateAccount() {
       <Form onSubmit={onSubmit}>
         <Input
           onChange={onChange}
-          name="userId"
-          value={userId}
+          name="username"
+          value={username}
           placeholder="아이디"
           type="text"
           required

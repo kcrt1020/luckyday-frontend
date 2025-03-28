@@ -12,7 +12,7 @@ interface IProfile {
   bio?: string | null;
   location?: string | null;
   website?: string | null;
-  userId: string;
+  username: string;
   email: string;
   birthDate?: string | null;
 }
@@ -194,7 +194,7 @@ export default function Profile() {
     location: null,
     website: null,
     email: "",
-    userId: "",
+    username: "",
     birthDate: null,
   });
 
@@ -202,30 +202,31 @@ export default function Profile() {
   const [showSavedMessage, setShowSavedMessage] = useState(false);
   const [editProfile, setEditProfile] = useState({
     nickname: "",
-    userId: "",
+    username: "",
     bio: "",
     location: "",
     website: "",
     birthDate: "",
   });
 
-  const { userId } = useParams();
+  const { username } = useParams();
 
   useEffect(() => {
     fetchProfile();
-  }, [userId]);
+  }, [username]);
 
   const currentUser = useCurrentUser();
-  const isOwnProfile = currentUser?.userId && userId === currentUser.userId;
+  const isOwnProfile =
+    currentUser?.username && username === currentUser.username;
 
   const fetchProfile = async () => {
     try {
-      const response = await apiRequest(`/api/profile/${userId}`);
+      const response = await apiRequest(`/api/profile/${username}`);
       if (response) {
         setProfile({
           ...response,
           nickname: response.nickname ?? "Anonymous",
-          userId: response.userId ?? "",
+          username: response.username ?? "",
           bio: response.bio ?? "",
           location: response.location ?? "",
           website: response.website ?? "",
@@ -234,7 +235,7 @@ export default function Profile() {
 
         setEditProfile({
           nickname: response.nickname ?? "",
-          userId: response.userId ?? "",
+          username: response.username ?? "",
           bio: response.bio ?? "",
           location: response.location ?? "",
           website: response.website ?? "",
@@ -374,8 +375,8 @@ export default function Profile() {
           </InputGroup>
           <InputGroup>
             <StyledInput
-              name="userId"
-              value={editProfile.userId}
+              name="username"
+              value={editProfile.username}
               onChange={handleEditChange}
               placeholder="아이디"
             />
@@ -383,7 +384,7 @@ export default function Profile() {
         </InputRow>
       ) : (
         <Name>
-          {profile.nickname} (@{profile.userId})
+          {profile.nickname} (@{profile.username})
         </Name>
       )}
 
@@ -457,9 +458,9 @@ export default function Profile() {
         </ButtonGroup>
       )}
 
-      {!isOwnProfile && <FollowButton targetUserId={profile.userId} />}
+      {!isOwnProfile && <FollowButton targetUsername={profile.username} />}
 
-      <Timeline userId={profile.userId} />
+      <Timeline username={profile.username} />
     </Wrapper>
   );
 }

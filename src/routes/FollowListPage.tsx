@@ -108,7 +108,7 @@ const Nickname = styled.div`
   font-size: 15px;
 `;
 
-const UserId = styled.div`
+const Username = styled.div`
   font-size: 15px;
   color: #666;
 `;
@@ -126,7 +126,7 @@ const EmptyMsg = styled.p`
 `;
 
 export default function FollowListPage() {
-  const { type, userId } = useParams<{ type: string; userId: string }>();
+  const { type, username } = useParams<{ type: string; username: string }>();
   const [userList, setUserList] = useState<User[]>([]);
 
   const pageTitle = type === "following" ? "팔로잉" : "팔로워";
@@ -136,8 +136,8 @@ export default function FollowListPage() {
       try {
         const endpoint =
           type === "following"
-            ? `/api/follow/following/${userId}`
-            : `/api/follow/followers/${userId}`;
+            ? `/api/follow/following/${username}`
+            : `/api/follow/followers/${username}`;
         const res = await apiRequest(endpoint);
         setUserList(res || []);
       } catch (err) {
@@ -146,7 +146,7 @@ export default function FollowListPage() {
     };
 
     fetchList();
-  }, [type, userId]);
+  }, [type, username]);
 
   const currentUser = useCurrentUser();
   const API_URL = import.meta.env.VITE_API_URL;
@@ -154,10 +154,10 @@ export default function FollowListPage() {
     <Wrapper>
       <Title>{pageTitle} 목록</Title>
       <Tabs>
-        <Tab to={`/profile/following/${userId}`} active={type === "following"}>
+        <Tab to={`/profile/following/${username}`} active={type === "following"}>
           팔로잉
         </Tab>
-        <Tab to={`/profile/followers/${userId}`} active={type === "followers"}>
+        <Tab to={`/profile/followers/${username}`} active={type === "followers"}>
           팔로워
         </Tab>
       </Tabs>
@@ -166,7 +166,7 @@ export default function FollowListPage() {
         {userList.length > 0 ? (
           userList.map((user) => (
             <UserItem key={user.id}>
-              <UserInfo to={`/profile/${user.userId}`}>
+              <UserInfo to={`/profile/${user.username}`}>
                 <ProfileWrapper>
                   {user.profile?.profileImage !== "Unknown" ? (
                     <ProfileImg
@@ -194,15 +194,15 @@ export default function FollowListPage() {
                 <UserText>
                   <NicknameRow>
                     <Nickname>{user.profile?.nickname}</Nickname>
-                    <UserId>@{user.userId}</UserId>
+                    <Username>@{user.username}</Username>
                   </NicknameRow>
                   <Bio>{user.profile?.bio}</Bio>
                 </UserText>
               </UserInfo>
 
               {/* 본인 아닌 경우만 FollowButton 보이게 */}
-              {user.userId !== currentUser?.userId && (
-                <FollowButton targetUserId={user.userId} />
+              {user.username !== currentUser?.username && (
+                <FollowButton targetUsername={user.username} />
               )}
             </UserItem>
           ))

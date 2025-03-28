@@ -3,11 +3,12 @@ import PostCloverForm from "../components/post-clover-form";
 import Timeline from "../components/timeline";
 
 const Wrapper = styled.div`
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 50px;
-  overflow-y: scroll;
-  grid-template-rows: 1fr 5fr;
-  height: 80vh; /* 부모 높이를 명확히 설정 */
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
 `;
 
 export default function Home() {

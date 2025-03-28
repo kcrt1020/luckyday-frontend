@@ -7,7 +7,7 @@ export interface IClover {
   id: string;
   content: string;
   imageUrl?: string;
-  userId: string;
+  username: string;
   email: string;
   nickname: string;
   createdAt: string;
@@ -16,10 +16,12 @@ export interface IClover {
 }
 
 const Wrapper = styled.div`
-  display: grid;
-  gap: 20px;
-  width: 700px;
+  display: flex;
   flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
 `;
 
 const spin = keyframes`
@@ -59,7 +61,7 @@ const FinishedMessage = styled.div`
   transition: all 0.3s ease;
 `;
 
-export default function Timeline({ userId }: { userId?: string }) {
+export default function Timeline({ username }: { username?: string }) {
   const [clovers, setClovers] = useState<IClover[]>([]);
   const [isReady, setIsReady] = useState(false);
   const [visibleCount, setVisibleCount] = useState(5);
@@ -77,7 +79,7 @@ export default function Timeline({ userId }: { userId?: string }) {
     const loadClovers = async () => {
       try {
         let url = "/api/clovers";
-        if (userId) url = `/api/clovers/user/${userId}`;
+        if (username) url = `/api/clovers/user/${username}`;
 
         const data: IClover[] | null = await apiRequest(url, { method: "GET" });
         if (data) {
@@ -92,7 +94,7 @@ export default function Timeline({ userId }: { userId?: string }) {
 
     const interval = setInterval(loadClovers, 5000);
     return () => clearInterval(interval);
-  }, [isReady, userId]);
+  }, [isReady, username]);
 
   const observeLastItem = useCallback((node: HTMLDivElement | null) => {
     if (observerRef.current) observerRef.current.disconnect();

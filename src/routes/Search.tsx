@@ -8,13 +8,13 @@ interface Clover {
   content: string;
   createdAt: string;
   email: string;
-  userId: string;
+  username: string;
   nickname: string;
   profileImage: string;
 }
 
 interface User {
-  userId: string;
+  username: string;
   nickname: string;
   profileImage: string;
 }
@@ -128,6 +128,8 @@ const Search = () => {
         )
       );
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
   return (
     <Wrapper>
       <Tabs>
@@ -146,9 +148,9 @@ const Search = () => {
               <CloverCard key={clover.id}>
                 <div>{highlight(clover.content)}</div>
                 <Meta>
-                  <img src={clover.profileImage} alt="프로필" />
+                  <img src={`${API_URL}${clover.profileImage}`} alt="프로필" />
                   <span>
-                    {clover.nickname} ({clover.userId})
+                    {clover.nickname} ({clover.username})
                   </span>
                 </Meta>
               </CloverCard>
@@ -166,7 +168,8 @@ const Search = () => {
               <UserCard key={i}>
                 <img src={user.profileImage} alt="프로필" />
                 <span>
-                  {highlight(user.nickname)} ({highlight(user.userId)})
+                  {user.nickname ? highlight(user.nickname) : "닉네임 없음"} (
+                  {user.username ? highlight(user.username) : "아이디 없음"})
                 </span>
               </UserCard>
             ))

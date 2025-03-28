@@ -4,7 +4,7 @@ import { apiRequest } from "../utills/api";
 import { useNavigate } from "react-router-dom";
 
 interface FollowButtonProps {
-  targetUserId: string;
+  targetUsername: string;
 }
 
 const Wrapper = styled.div`
@@ -51,7 +51,7 @@ const FollowItem = styled.div`
   }
 `;
 
-export default function FollowButton({ targetUserId }: FollowButtonProps) {
+export default function FollowButton({ targetUsername }: FollowButtonProps) {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followingCount, setFollowingCount] = useState(0);
   const [followersCount, setFollowersCount] = useState(0);
@@ -62,7 +62,7 @@ export default function FollowButton({ targetUserId }: FollowButtonProps) {
     const fetchData = async () => {
       try {
         const followRes = await apiRequest(
-          `/api/follow/status/${targetUserId}`
+          `/api/follow/status/${targetUsername}`
         );
         setIsFollowing(followRes?.isFollowing ?? false);
 
@@ -81,15 +81,15 @@ export default function FollowButton({ targetUserId }: FollowButtonProps) {
     };
 
     fetchData();
-  }, [targetUserId]);
+  }, [targetUsername]);
 
   // 팔로우/언팔로우 토글
   const handleToggleFollow = async () => {
     try {
       if (isFollowing) {
-        await apiRequest(`/api/follow/${targetUserId}`, { method: "DELETE" });
+        await apiRequest(`/api/follow/${targetUsername}`, { method: "DELETE" });
       } else {
-        await apiRequest(`/api/follow/${targetUserId}`, { method: "POST" });
+        await apiRequest(`/api/follow/${targetUsername}`, { method: "POST" });
       }
       setIsFollowing((prev) => !prev);
     } catch (err) {
@@ -99,7 +99,7 @@ export default function FollowButton({ targetUserId }: FollowButtonProps) {
 
   // 팔로잉/팔로워 페이지로 이동
   const goToFollowPage = (type: "following" | "followers") => {
-    navigate(`/profile/${type}/${targetUserId}`);
+    navigate(`/profile/${type}/${targetUsername}`);
   };
 
   return (

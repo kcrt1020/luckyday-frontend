@@ -46,7 +46,7 @@ const router = createBrowserRouter([
     ),
     children: [
       {
-        path: ":userId",
+        path: ":username",
         element: <Profile />,
       },
     ],
@@ -66,7 +66,7 @@ const router = createBrowserRouter([
     ],
   },
   {
-    path: "/profile/:type/:userId",
+    path: "/profile/:type/:username",
     element: (
       <ProtectedRoute>
         <Layout />
@@ -112,9 +112,6 @@ const GlobalStyles = createGlobalStyle`
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-  }
-  ::-webkit-scrollbar {
-    display: none;
   }
 `;
 
