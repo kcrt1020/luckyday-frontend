@@ -10,3 +10,24 @@ export interface UserProfile {
   bio: string;
   profileImage: string;
 }
+
+export interface NotificationSender {
+  id: number;
+  username: string;
+  profile: {
+    nickname: string;
+    profileImage: string;
+  };
+}
+
+export type NotificationType = "LIKE" | "COMMENT" | "FOLLOW";
+
+export interface Notification {
+  id: number;
+  type: NotificationType;
+  targetId: number;
+  url: string;
+  isRead: boolean;
+  createdAt: string;
+  sender: NotificationSender;
+}

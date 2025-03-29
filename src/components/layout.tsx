@@ -2,6 +2,8 @@ import { Link, Outlet, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { apiRequest } from "../utills/api";
 import { useEffect, useState } from "react";
+import NotificationBell from "./NotificationBell";
+import NotificationToast from "./NotificationToast";
 
 const Wrapper = styled.div`
   margin-left: 100px;
@@ -220,6 +222,7 @@ export default function Layout() {
               </svg>
             </MenuItem>
           </Link>
+          <NotificationBell />
           <MenuItem className="log-out" onClick={onLogOut}>
             <svg
               fill="currentColor"
@@ -267,6 +270,8 @@ export default function Layout() {
       </Menu>
 
       <Content>
+        {/* 실시간 알림 토스트 */}
+        <NotificationToast />
         <Outlet />
       </Content>
     </Wrapper>
