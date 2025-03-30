@@ -4,11 +4,11 @@ import { apiRequest } from "../utills/api";
 import { useEffect, useState } from "react";
 import NotificationBell from "./NotificationBell";
 import NotificationToast from "./NotificationToast";
+import SearchBar from "./SearchBar";
 
 const Wrapper = styled.div`
   margin-left: 100px;
   width: calc(100% - 80px);
-  padding: 50px 0px;
   max-width: 860px;
   background-color: inherit;
 `;
@@ -62,58 +62,12 @@ const MenuItem = styled.div`
   }
 `;
 
-const SearchBarWrapper = styled.div`
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  padding: 10px 0;
-`;
-
-const SearchForm = styled.div`
-  display: flex;
-  align-items: center;
-  background-color: white;
-  border: 2px solid #81c147;
-  border-radius: 10px;
-  overflow: hidden;
-  width: 80%;
-  max-width: 160px;
-`;
-
-const SearchInput = styled.input`
-  flex: 1;
-  padding: 0.5rem 0.6rem;
-  font-size: 0.9rem;
-  border: none;
-  outline: none;
-  background: transparent;
-`;
-
-const SearchButton = styled.button`
-  background-color: #81c147;
-  border: none;
-  padding: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-
-  svg {
-    width: 18px;
-    height: 18px;
-    fill: white;
-  }
-
-  &:hover {
-    background-color: #6aa836;
-  }
-`;
-
 // 오른쪽 메인 콘텐츠
 const Content = styled.div`
   width: 100%;
-  height: 100%;
+  overflow-y: auto;
   background-color: inherit;
+  padding-top: 100px;
 `;
 
 export default function Layout() {
@@ -171,25 +125,9 @@ export default function Layout() {
     fetchCurrentUser();
   }, []);
 
-  const [searchKeyword, setSearchKeyword] = useState("");
-
-  // 👇 실제 검색을 실행하는 함수 (검색어가 있을 때만)
-  const executeSearch = () => {
-    if (searchKeyword.trim()) {
-      navigate(`/search?keyword=${encodeURIComponent(searchKeyword.trim())}`);
-      setSearchKeyword("");
-    }
-  };
-
-  // ⌨️ Enter 키 눌렀을 때 실행
-  const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      executeSearch();
-    }
-  };
-
   return (
     <Wrapper>
+      <SearchBar />
       <Menu>
         <MenuTop>
           <Link to="/">
@@ -242,35 +180,9 @@ export default function Layout() {
             </svg>
           </MenuItem>
         </MenuTop>
-
-        <SearchBarWrapper>
-          <SearchForm>
-            <SearchInput
-              type="text"
-              placeholder="검색어를 입력하세요"
-              value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
-              onKeyDown={handleSearch}
-            />
-            <SearchButton onClick={executeSearch}>
-              <svg
-                fill="currentColor"
-                viewBox="0 0 20 20"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M12.9 14.32a8 8 0 1 1 1.414-1.414l4.387 4.386a1 1 0 0 1-1.414 1.415l-4.387-4.387ZM14 8a6 6 0 1 1-12 0 6 6 0 0 1 12 0Z"
-                ></path>
-              </svg>
-            </SearchButton>
-          </SearchForm>
-        </SearchBarWrapper>
       </Menu>
 
       <Content>
-        {/* 실시간 알림 토스트 */}
         <NotificationToast />
         <Outlet />
       </Content>

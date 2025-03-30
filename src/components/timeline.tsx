@@ -61,7 +61,13 @@ const FinishedMessage = styled.div`
   transition: all 0.3s ease;
 `;
 
-export default function Timeline({ username }: { username?: string }) {
+export default function Timeline({
+  username,
+  keyword,
+}: {
+  username?: string;
+  keyword?: string;
+}) {
   const [clovers, setClovers] = useState<IClover[]>([]);
   const [isReady, setIsReady] = useState(false);
   const [visibleCount, setVisibleCount] = useState(5);
@@ -77,16 +83,17 @@ export default function Timeline({ username }: { username?: string }) {
     if (!isReady) return;
 
     const loadClovers = async () => {
-      try {
-        let url = "/api/clovers";
-        if (username) url = `/api/clovers/user/${username}`;
+      let url = "/api/clovers";
+      if (username) url = `/api/clovers/user/${username}`;
+      const data: IClover[] | null = await apiRequest(url, { method: "GET" });
 
-        const data: IClover[] | null = await apiRequest(url, { method: "GET" });
-        if (data) {
-          setClovers(data);
-        }
-      } catch (error) {
-        console.error("🚨 클로버 가져오기 실패:", error);
+      if (data) {
+        const filtered = keyword
+          ? data.filter((clover) =>
+              clover.content.toLowerCase().includes(keyword.toLowerCase())
+            )
+          : data;
+        setClovers(filtered);
       }
     };
 
@@ -94,7 +101,7 @@ export default function Timeline({ username }: { username?: string }) {
 
     const interval = setInterval(loadClovers, 5000);
     return () => clearInterval(interval);
-  }, [isReady, username]);
+  }, [isReady, username, keyword]);
 
   const observeLastItem = useCallback((node: HTMLDivElement | null) => {
     if (observerRef.current) observerRef.current.disconnect();
