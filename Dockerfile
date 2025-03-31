@@ -1,24 +1,25 @@
-# FROM node:20
-# WORKDIR /app
-# COPY package.json ./
-# RUN npm install
-# COPY . .
-# EXPOSE 3000
-# CMD ["npm", "start"]
-
-FROM node:20
+# 1단계: Node 환경에서 빌드
+FROM node:20 as build
 WORKDIR /app
 
-# 1️⃣ package.json과 package-lock.json만 먼저 복사 (캐시 활용)
+# package 파일 먼저 복사 → 캐시 활용
 COPY package.json package-lock.json ./
+RUN npm install
 
-# 2️⃣ 캐시를 활용해서 패키지 설치 (여기까지는 캐시가 남아있음)
-RUN npm install  
+# 소스코드 복사 후 빌드
+COPY . .
+RUN npm run build
 
-# 3️⃣ 이제 나머지 소스 코드 복사 (이 단계에서만 새로 빌드됨)
-COPY . .  
+# 2단계: Nginx로 정적 파일 서빙
+FROM nginx:alpine
 
-# 4️⃣ Vite 개발 서버 실행
-CMD ["npm", "run", "dev"]
+# Nginx 설정 파일 덮어쓰기 (optional)
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# CMD ["npm", "start"] 배포용
+# 빌드된 정적 파일 복사
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Nginx는 기본적으로 80포트 사용
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
