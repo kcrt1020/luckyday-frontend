@@ -11,19 +11,23 @@ import { useNavigate } from "react-router-dom";
 import { IClover } from "./timeline";
 import CloverActions from "./CloverActions";
 
-const Wrapper = styled.div`
+const Wrapper = styled.div<{ $isReply?: boolean }>`
   display: flex;
   flex-direction: column;
   padding: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 15px;
-  background-color: #222;
+  background-color: ${({ $isReply }) => ($isReply ? "#2a2a2a" : "#222")};
+  margin-left: ${({ $isReply }) => ($isReply ? "20px" : "0")};
+  border-left: ${({ $isReply }) => ($isReply ? "2px solid #81c147" : "none")};
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
   cursor: pointer;
+  gap: 15px;
+  position: relative;
+
   &:hover {
-    outline: none;
     border-color: #81c147;
   }
-  gap: 15px;
 `;
 
 const ProfileWrapper = styled.div`
@@ -74,20 +78,6 @@ const ActionWrapper = styled.div`
   width: 100%;
 `;
 
-const Card = styled.div<{ $isReply?: boolean }>`
-  width: 100%;
-  padding: 15px;
-  margin-top: ${(props) => (props.$isReply ? "10px" : "20px")};
-  border-radius: 15px;
-  background-color: ${(props) => (props.$isReply ? "#2a2a2a" : "#333")};
-  border-left: ${(props) => (props.$isReply ? "3px solid #81c147" : "none")};
-  margin-left: ${(props) => (props.$isReply ? "20px" : "0")};
-  color: white;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`;
-
 export default function Clover({
   id,
   email,
@@ -97,8 +87,10 @@ export default function Clover({
   content,
   profileImage,
   createdAt,
-  isReply,
-}: IClover) {
+  parent_clover_id,
+  hideActions = false,
+}: IClover & { hideActions?: boolean }) {
+  const isReply = !!parent_clover_id;
   const API_URL = import.meta.env.VITE_API_URL;
   const [currentUser, setCurrentUser] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -107,17 +99,13 @@ export default function Clover({
     const fetchCurrentUser = async () => {
       try {
         const token = localStorage.getItem("accessToken");
-        if (!token) {
-          console.warn("🚨 로그인된 유저 정보 없음");
-          return;
-        }
+        if (!token) return;
 
         const response = await fetch(`${API_URL}/api/user/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        if (!response.ok)
-          throw new Error("🚨 로그인된 유저 정보 가져오기 실패");
+        if (!response.ok) throw new Error("유저 정보 실패");
 
         const data = await response.json();
         setCurrentUser(data.email);
@@ -130,86 +118,45 @@ export default function Clover({
   }, [API_URL]);
 
   const formatTime = (createdAt: string) => {
-    // 소수점 3자리까지만 유지 (밀리초 단위로 처리)
-    const sanitizedCreatedAt = createdAt
+    const sanitized = createdAt
       .replace(" ", "T")
       .replace(/(\.\d{3})\d+$/, "$1");
+    const date = parse(sanitized, "yyyy-MM-dd'T'HH:mm:ss.SSS", new Date());
 
-    const kstDate = parse(
-      sanitizedCreatedAt,
-      "yyyy-MM-dd'T'HH:mm:ss.SSS",
-      new Date()
-    );
-
-    if (isNaN(kstDate.getTime())) {
-      console.error("🚨 Invalid Date Format:", createdAt);
-      return "알 수 없음";
-    }
+    if (isNaN(date.getTime())) return "알 수 없음";
 
     const now = new Date();
-    const diffInMinutes = differenceInMinutes(now, kstDate);
-    const diffInHours = differenceInHours(now, kstDate);
-    const currentYear = getYear(now);
-    const createdYear = getYear(kstDate);
+    const diffMin = differenceInMinutes(now, date);
+    const diffHour = differenceInHours(now, date);
 
-    if (diffInMinutes < 60) {
-      return `${diffInMinutes}분`;
-    } else if (diffInHours < 24) {
-      return `${diffInHours}시간`;
-    } else {
-      return createdYear === currentYear
-        ? format(kstDate, "MM월 dd일")
-        : format(kstDate, "yyyy년 MM월 dd일");
-    }
+    if (diffMin < 60) return `${diffMin}분`;
+    if (diffHour < 24) return `${diffHour}시간`;
+
+    return getYear(now) === getYear(date)
+      ? format(date, "MM월 dd일")
+      : format(date, "yyyy년 MM월 dd일");
   };
 
   const handleProfileClick = () => {
     navigate(`/profile/${username}`);
   };
 
-  if (isReply) {
-    // 댓글용 Card 스타일
-    return (
-      <Card $isReply>
-        <UserInfo>
-          <ProfileWrapper>
-            {profileImage !== "Unknown" ? (
-              <ProfileImg
-                src={`${API_URL}${profileImage}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleProfileClick();
-                }}
-                alt="Profile"
-              />
-            ) : (
-              <ProfileSVG viewBox="0 0 24 24">
-                <svg
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-hidden="true"
-                >
-                  <path
-                    clipRule="evenodd"
-                    fillRule="evenodd"
-                    d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z"
-                  ></path>
-                </svg>
-              </ProfileSVG>
-            )}
-          </ProfileWrapper>
-          {nickname} (@{username}) • {formatTime(createdAt)}
-        </UserInfo>
-        <Payload>{content}</Payload>
-      </Card>
-    );
-  }
-
-  // 원글용 기존 Wrapper 레이아웃
   return (
-    <Wrapper onClick={() => navigate(`/clovers/${id}`)}>
-      {/* 유저 정보 + 글 */}
+    <Wrapper $isReply={isReply} onClick={() => navigate(`/clovers/${id}`)}>
+      {isReply && (
+        <div
+          style={{
+            position: "absolute",
+            top: "12px",
+            left: "-20px",
+            fontSize: "16px",
+            color: "#81c147",
+          }}
+        >
+          ↳
+        </div>
+      )}
+
       <div>
         <UserInfo>
           <ProfileWrapper>
@@ -244,17 +191,17 @@ export default function Clover({
         <Payload>{content}</Payload>
       </div>
 
-      {/* 이미지가 있을 경우에만 렌더링 */}
       {imageUrl && <Photo src={`${API_URL}${imageUrl}`} alt="Clover Image" />}
 
-      {/* 액션 버튼 (댓글, 좋아요 등) */}
-      <ActionWrapper onClick={(e) => e.stopPropagation()}>
-        <CloverActions
-          cloverId={Number(id)}
-          currentUser={currentUser}
-          authorEmail={email}
-        />
-      </ActionWrapper>
+      {!hideActions && (
+        <ActionWrapper onClick={(e) => e.stopPropagation()}>
+          <CloverActions
+            cloverId={Number(id)}
+            currentUser={currentUser}
+            authorEmail={email}
+          />
+        </ActionWrapper>
+      )}
     </Wrapper>
   );
 }

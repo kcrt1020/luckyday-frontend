@@ -12,7 +12,7 @@ export interface IClover {
   nickname: string;
   createdAt: string;
   profileImage: string;
-  isReply?: boolean;
+  parent_clover_id?: string | null;
 }
 
 const Wrapper = styled.div`
@@ -22,6 +22,18 @@ const Wrapper = styled.div`
   width: 100%;
   max-width: 700px;
   margin: 0 auto;
+  overflow: visible;
+`;
+
+const CloverWrapper = styled.div<{ marginLeft?: number }>`
+  padding-left: ${({ marginLeft }) => marginLeft || 0}px;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow: visible;
+  gap: 20px;
 `;
 
 const spin = keyframes`
@@ -72,7 +84,6 @@ export default function Timeline({
   const [isReady, setIsReady] = useState(false);
   const [visibleCount, setVisibleCount] = useState(5);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-
   const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
@@ -103,44 +114,99 @@ export default function Timeline({
     return () => clearInterval(interval);
   }, [isReady, username, keyword]);
 
+  // 중복 제거 + 부모 포함 정렬
+  const organizeClovers = (flatClovers: IClover[]) => {
+    const cloverMap = new Map<string, IClover & { replies: IClover[] }>();
+
+    flatClovers.forEach((clover) => {
+      cloverMap.set(clover.id, { ...clover, replies: [] });
+    });
+
+    flatClovers.forEach((clover) => {
+      if (clover.parent_clover_id) {
+        const parent = cloverMap.get(clover.parent_clover_id);
+        const child = cloverMap.get(clover.id);
+        if (parent && child) parent.replies.push(child);
+      }
+    });
+
+    const ordered: (IClover & { replies: IClover[] })[] = [];
+    const seen = new Set<string>();
+
+    [...flatClovers]
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+      .forEach((clover) => {
+        const current = cloverMap.get(clover.id);
+        if (!current || seen.has(current.id)) return;
+
+        if (current.parent_clover_id) {
+          const parent = cloverMap.get(current.parent_clover_id);
+          if (parent && !seen.has(parent.id)) {
+            ordered.push(parent);
+            seen.add(parent.id);
+            parent.replies.forEach((r) => seen.add(r.id));
+          }
+        } else {
+          ordered.push(current);
+          seen.add(current.id);
+        }
+      });
+
+    return ordered;
+  };
+
+  const renderClovers = (
+    clovers: (IClover & { replies?: IClover[] })[],
+    level = 0
+  ) => {
+    return clovers.map((clover, index) => {
+      const isLast = index === clovers.length - 1;
+      return (
+        <CloverWrapper
+          key={clover.id}
+          ref={isLast ? observeLastItem : null}
+          marginLeft={Math.min(level * 5, 30)}
+        >
+          <Clover
+            {...clover}
+            parent_clover_id={clover.parent_clover_id ?? null}
+          />
+          {level < 3 &&
+            clover.replies &&
+            clover.replies.length > 0 &&
+            renderClovers(clover.replies, level + 1)}
+        </CloverWrapper>
+      );
+    });
+  };
+
   const observeLastItem = useCallback((node: HTMLDivElement | null) => {
     if (observerRef.current) observerRef.current.disconnect();
 
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          console.log("✅ 마지막 아이템 화면에 보임! → visibleCount 증가");
-          setIsLoadingMore(true);
-          setTimeout(() => {
-            setVisibleCount((prev) => prev + 5);
-            setIsLoadingMore(false);
-          }, 500);
-        }
-      },
-      {
-        root: null,
-        rootMargin: "0px",
-        threshold: 1.0,
+    observerRef.current = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        setIsLoadingMore(true);
+        setTimeout(() => {
+          setVisibleCount((prev) => prev + 5);
+          setIsLoadingMore(false);
+        }, 500);
       }
-    );
+    });
 
     if (node) observerRef.current.observe(node);
   }, []);
 
-  const visibleClovers = clovers.slice(0, visibleCount);
+  const organizedClovers = organizeClovers(clovers);
+  const visibleClovers = organizedClovers.slice(0, visibleCount);
 
   return (
     <>
       <Wrapper>
         {visibleClovers.length > 0 ? (
-          visibleClovers.map((clover, index) => {
-            const isLast = index === visibleClovers.length - 1;
-            return (
-              <div key={clover.id} ref={isLast ? observeLastItem : null}>
-                <Clover {...clover} />
-              </div>
-            );
-          })
+          renderClovers(visibleClovers)
         ) : (
           <p>클로버가 없습니다.</p>
         )}
@@ -149,8 +215,8 @@ export default function Timeline({
       {isLoadingMore && <Spinner />}
 
       {!isLoadingMore &&
-        visibleCount >= clovers.length &&
-        clovers.length > 0 && (
+        visibleCount >= organizedClovers.length &&
+        organizedClovers.length > 0 && (
           <FinishedMessage>오늘의 클로버는 여기까지 ✨</FinishedMessage>
         )}
     </>

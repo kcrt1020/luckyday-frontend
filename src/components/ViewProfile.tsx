@@ -19,7 +19,7 @@ const Wrapper = styled.div`
 `;
 
 const ProfileCard = styled.div`
-  width: 300px;
+  width: 400px;
   background-color: #111;
   border: 1px solid #2a2a2a;
   border-radius: 20px;
@@ -46,7 +46,6 @@ const Name = styled.h2`
 
   span {
     font-size: 16px;
-    color: #81c147;
     margin-left: 6px;
   }
 `;

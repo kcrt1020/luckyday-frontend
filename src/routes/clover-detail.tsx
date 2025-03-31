@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
-import { format, addHours } from "date-fns";
-import Clover from "../components/clover";
 import { apiRequest } from "../utills/api";
+import Clover from "../components/clover";
 import CloverActions from "../components/CloverActions";
 
-interface Clover {
+interface CloverData {
   id: string;
   email: string;
   username: string;
@@ -15,20 +14,24 @@ interface Clover {
   content: string;
   profileImage: string;
   createdAt: string;
+  parent_clover_id?: string | null;
 }
 
 const Wrapper = styled.div`
   width: 700px;
   margin: 20px auto;
   padding: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 15px;
-  background-color: #222;
   color: white;
-  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+`;
+
+const MainCloverBox = styled.div`
   display: flex;
   flex-direction: column;
   gap: 15px;
+  padding-bottom: 10px;
 `;
 
 const UserInfo = styled.div`
@@ -36,7 +39,6 @@ const UserInfo = styled.div`
   align-items: center;
   font-weight: 600;
   font-size: 16px;
-  margin-bottom: 10px;
 `;
 
 const ProfileWrapper = styled.div`
@@ -57,31 +59,26 @@ const ProfileImg = styled.img`
   object-fit: cover;
 `;
 
-const ProfileSVG = styled.svg`
-  width: 50%;
-  height: 50%;
-  fill: white;
-`;
-
 const Content = styled.p`
   font-size: 18px;
-  margin-bottom: 15px;
+  line-height: 1.6;
+  text-align: left;
 `;
 
 const Image = styled.img`
   width: 100%;
-  border-radius: 10px;
+  max-height: 400px;
   object-fit: cover;
+  border-radius: 10px;
 `;
 
-const TimeStamp = styled.span`
+const TimeStamp = styled.div`
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.7);
+  color: #aaa;
   text-align: right;
 `;
 
 const ReplyFormWrapper = styled.div`
-  margin-top: 20px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -91,7 +88,6 @@ const ReplyInput = styled.textarea`
   width: 100%;
   padding: 20px;
   border-radius: 20px;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   font-size: 16px;
   background-color: black;
   color: white;
@@ -100,10 +96,6 @@ const ReplyInput = styled.textarea`
   &:focus {
     outline: none;
     border-color: #81c147;
-  }
-  &::placeholder {
-    color: #aaa;
-    font-size: 16px;
   }
 `;
 
@@ -138,77 +130,63 @@ const ActionWrapper = styled.div`
 export default function CloverDetail() {
   const { id } = useParams();
   const API_URL = import.meta.env.VITE_API_URL;
-
-  const [clover, setClover] = useState<Clover | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  // ✅ 댓글 관련 상태들
-  const [replies, setReplies] = useState<Clover[]>([]);
+  const [clover, setClover] = useState<CloverData | null>(null);
+  const [parentClover, setParentClover] = useState<CloverData | null>(null);
+  const [replies, setReplies] = useState<CloverData[]>([]);
   const [reply, setReply] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
+  const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<string | null>(null);
 
-  // ✅ 원글 조회
   useEffect(() => {
     const fetchClover = async () => {
       try {
         const token = localStorage.getItem("accessToken");
-        if (!token) {
-          console.warn("🚨 로그인된 유저 정보 없음");
-          return;
-        }
+        if (!token) return;
 
-        const response = await fetch(`${API_URL}/api/clovers/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const res = await fetch(`${API_URL}/api/clovers/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
-
-        if (!response.ok) {
-          throw new Error(`🚨 클로버 가져오기 실패 (HTTP ${response.status})`);
-        }
-
-        const data: Clover = await response.json();
+        const data: CloverData = await res.json();
         setClover(data);
-      } catch (error) {
-        console.error("🚨 API 요청 중 오류 발생:", error);
+
+        if (data.parent_clover_id && data.parent_clover_id !== data.id) {
+          const parentRes = await fetch(
+            `${API_URL}/api/clovers/${data.parent_clover_id}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          if (parentRes.ok) {
+            const parentData: CloverData = await parentRes.json();
+            if (parentData.id !== data.id) setParentClover(parentData);
+          }
+        }
+      } catch (e) {
+        console.error("클로버 조회 실패", e);
       } finally {
         setLoading(false);
       }
     };
-
     fetchClover();
   }, [id, API_URL]);
-
-  // ✅ 댓글 조회
-  useEffect(() => {
-    const fetchReplies = async () => {
-      try {
-        const data = await apiRequest(`/api/clovers/replies/${id}`);
-        setReplies(data);
-      } catch (e) {
-        console.error("❌ 댓글 불러오기 실패", e);
-      }
-    };
-
-    if (id) fetchReplies();
-  }, [id]);
 
   const fetchReplies = useCallback(async () => {
     try {
       const data = await apiRequest(`/api/clovers/replies/${id}`);
       setReplies(data);
     } catch (e) {
-      console.error("❌ 댓글 불러오기 실패", e);
+      console.error("댓글 불러오기 실패", e);
     }
   }, [id]);
 
-  // ✅ 댓글 등록
+  useEffect(() => {
+    if (id) fetchReplies();
+  }, [id, fetchReplies]);
+
   const handleSubmitReply = async () => {
     if (!reply.trim()) return;
     setSubmitting(true);
-
     try {
       const token = localStorage.getItem("accessToken");
       if (!token) throw new Error("로그인이 필요합니다.");
@@ -217,7 +195,6 @@ export default function CloverDetail() {
         content: reply,
         parentClover: { id: Number(id) },
       });
-
       const formData = new FormData();
       formData.append(
         "content",
@@ -226,96 +203,78 @@ export default function CloverDetail() {
 
       const res = await fetch(`${API_URL}/api/clovers`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
 
       if (!res.ok) throw new Error("댓글 등록 실패");
-
-      // 등록 후 목록 새로고침
       await fetchReplies();
       setReply("");
     } catch (e) {
-      console.error("❌ 댓글 등록 실패", e);
+      console.error("댓글 등록 실패", e);
     } finally {
       setSubmitting(false);
     }
   };
 
   useEffect(() => {
-    if (id) fetchReplies();
-  }, [id, fetchReplies]);
-
-  // ✅ 시간 포맷
-  const formatTime = (createdAt: string) => {
-    const utcDate = new Date(createdAt);
-    const kstDate = addHours(utcDate, 9);
-    return format(kstDate, "yyyy년 MM월 dd일 HH:mm");
-  };
-
-  useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
         const token = localStorage.getItem("accessToken");
-        if (!token) {
-          console.warn("🚨 로그인된 유저 정보 없음");
-          return;
-        }
+        if (!token) return;
 
-        const response = await fetch(`${API_URL}/api/user/me`, {
+        const res = await fetch(`${API_URL}/api/user/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-
-        if (!response.ok)
-          throw new Error("🚨 로그인된 유저 정보 가져오기 실패");
-
-        const data = await response.json();
+        const data = await res.json();
         setCurrentUser(data.email);
-      } catch (error) {
-        console.error("Error fetching user:", error);
+      } catch (e) {
+        console.error("유저 정보 조회 실패", e);
       }
     };
-
     fetchCurrentUser();
   }, [API_URL]);
 
   if (loading) return <Wrapper>Loading...</Wrapper>;
-  if (!clover) return <Wrapper>클로버 정보를 불러올 수 없습니다.</Wrapper>;
+  if (!clover) return <Wrapper>클로버를 불러올 수 없습니다.</Wrapper>;
 
   return (
     <Wrapper>
-      {/* 원글 */}
-      <UserInfo>
-        <ProfileWrapper>
-          {clover.profileImage !== "Unknown" ? (
-            <ProfileImg
-              src={`${API_URL}${clover.profileImage}`}
-              alt="Profile"
-            />
-          ) : (
-            <ProfileSVG viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z"></path>
-            </ProfileSVG>
-          )}
-        </ProfileWrapper>
-        <div>
-          {clover.nickname} (@{clover.username}) &nbsp;
-          <TimeStamp>{formatTime(clover.createdAt)}</TimeStamp>
+      {parentClover && parentClover.id !== clover.id && (
+        <div style={{ opacity: 0.6 }}>
+          <Clover {...parentClover} hideActions />
         </div>
-      </UserInfo>
-
-      <Content>{clover.content}</Content>
-
-      {clover.imageUrl && (
-        <Image src={`${API_URL}${clover.imageUrl}`} alt="Clover" />
       )}
 
-      {/* 액션 버튼 (댓글, 좋아요 등) */}
+      <MainCloverBox>
+        <UserInfo>
+          <ProfileWrapper>
+            {clover.profileImage !== "Unknown" ? (
+              <ProfileImg src={`${API_URL}${clover.profileImage}`} />
+            ) : (
+              <div style={{ color: "black" }}>🤍</div>
+            )}
+          </ProfileWrapper>
+          {clover.nickname} (@{clover.username})
+        </UserInfo>
+        <Content>{clover.content}</Content>
+        {clover.imageUrl && (
+          <Image src={`${API_URL}${clover.imageUrl}`} alt="clover" />
+        )}
+        <TimeStamp>
+          {new Date(clover.createdAt).toLocaleString("ko-KR", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </TimeStamp>
+      </MainCloverBox>
+
       <ActionWrapper onClick={(e) => e.stopPropagation()}>
         <CloverActions
-          cloverId={Number(id)}
+          cloverId={Number(clover.id)}
           currentUser={currentUser}
           authorEmail={clover.email}
           disableCommentToggle
@@ -336,7 +295,7 @@ export default function CloverDetail() {
         </ReplyButtonWrapper>
       </ReplyFormWrapper>
 
-      <div style={{ marginTop: "30px" }}>
+      <div>
         {replies.map((reply) => (
           <Clover key={reply.id} {...reply} />
         ))}
