@@ -1,6 +1,6 @@
 import styled from "styled-components";
-import PostCloverForm from "../components/post-clover-form";
-import Timeline from "../components/timeline";
+import PostCloverForm from "../components/PostCloverForm";
+import Timeline from "../components/Timeline";
 
 const Wrapper = styled.div`
   display: flex;

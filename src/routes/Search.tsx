@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import styled from "styled-components";
 import { apiRequest } from "../utills/api";
-import Timeline from "../components/timeline";
 import UserList from "../components/UserList";
 import { User } from "../utills/types";
+import Timeline from "../components/Timeline";
 
 interface TabProps {
   $active: boolean;
@@ -18,19 +18,24 @@ const Wrapper = styled.div`
 
 const Tabs = styled.div`
   display: flex;
-  border-bottom: 2px solid #ccc;
-  margin-bottom: 1rem;
+  justify-content: space-around;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #eee;
 `;
 
 const Tab = styled.div<TabProps>`
-  flex: 1;
-  text-align: center;
-  padding: 0.8rem 0;
-  font-weight: bold;
+  padding: 12px 0;
+  font-size: 15px;
+  font-weight: ${({ $active }) => ($active ? "600" : "400")};
+  color: ${({ $active }) => ($active ? "#81c147" : "#888")};
+  border-bottom: ${({ $active }) =>
+    $active ? "2px solid #81c147" : "2px solid transparent"};
   cursor: pointer;
-  color: ${({ $active }) => ($active ? "#fff" : "#333")};
-  background-color: ${({ $active }) => ($active ? "#81c147" : "transparent")};
-  transition: all 0.3s ease;
+  transition: color 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    color: #81c147;
+  }
 `;
 
 export default function Search() {

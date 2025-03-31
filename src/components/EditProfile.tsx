@@ -1,6 +1,6 @@
 import { useState } from "react";
 import styled from "styled-components";
-import { IProfile } from "../routes/profile";
+import { IProfile } from "../routes/Profile";
 import { apiRequest } from "../utills/api";
 
 interface EditProfileProps {

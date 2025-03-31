@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import "./App.css";
-import Login from "./routes/login";
+import Login from "./routes/Login";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import LoadingScreen from "./components/loading-screen";
-import Home from "./routes/home";
-import ProtectedRoute from "./routes/protected-route";
-import Layout from "./components/layout";
+import LoadingScreen from "./components/LoadingScreen";
+import Home from "./routes/Home";
+import ProtectedRoute from "./routes/ProtectedRoute";
+import Layout from "./components/Layout";
 import reset from "styled-reset";
 import styled, { createGlobalStyle } from "styled-components";
-import CreateAccount from "./routes/create-account";
-import Profile from "./routes/profile";
-import CloverDetail from "./routes/clover-detail";
-import FollowListPage from "./routes/FollowListPage";
+import CreateAccount from "./routes/CreateAccount";
+import Profile from "./routes/Profile";
+import CloverDetail from "./routes/CloverDetail";
+import FollowList from "./routes/FollowList";
 import Search from "./routes/Search";
 import NotificationPage from "./routes/Notification";
 
@@ -76,7 +76,7 @@ const router = createBrowserRouter([
     children: [
       {
         path: "",
-        element: <FollowListPage />,
+        element: <FollowList />,
       },
     ],
   },
@@ -127,6 +127,7 @@ const GlobalStyles = createGlobalStyle`
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow-x: hidden;
   }
 `;
 

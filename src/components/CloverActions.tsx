@@ -1,7 +1,7 @@
 import styled, { css, keyframes } from "styled-components";
 import { useState, useEffect } from "react";
-import { IClover } from "./timeline";
 import { apiRequest } from "../utills/api";
+import { IClover } from "./Timeline";
 
 const API_URL = import.meta.env.VITE_API_URL;
 

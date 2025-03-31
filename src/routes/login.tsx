@@ -7,7 +7,7 @@ import {
   Switcher,
   Title,
   Wrapper,
-} from "../components/auth-components";
+} from "../components/AuthComponents";
 import { apiRequest } from "../utills/api";
 
 export default function Login() {

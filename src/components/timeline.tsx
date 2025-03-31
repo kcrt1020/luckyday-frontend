@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import styled, { keyframes } from "styled-components";
-import Clover from "./clover";
 import { apiRequest } from "../utills/api";
+import Clover from "./Clover";
 
 export interface IClover {
   id: string;
@@ -22,7 +22,7 @@ const Wrapper = styled.div`
   width: 100%;
   max-width: 700px;
   margin: 0 auto;
-  overflow: visible;
+  overflow: visible !important;
 `;
 
 const CloverWrapper = styled.div<{ marginLeft?: number }>`
@@ -32,7 +32,6 @@ const CloverWrapper = styled.div<{ marginLeft?: number }>`
   display: flex;
   flex-direction: column;
   width: 100%;
-  overflow: visible;
   gap: 20px;
 `;
 

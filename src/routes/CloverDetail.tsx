@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { apiRequest } from "../utills/api";
-import Clover from "../components/clover";
 import CloverActions from "../components/CloverActions";
+import Clover from "../components/Clover";
 
 interface CloverData {
   id: string;

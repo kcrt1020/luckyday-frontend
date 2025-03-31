@@ -65,7 +65,6 @@ const MenuItem = styled.div`
 // 오른쪽 메인 콘텐츠
 const Content = styled.div`
   width: 100%;
-  overflow-y: auto;
   background-color: inherit;
   padding-top: 100px;
 `;

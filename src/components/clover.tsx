@@ -8,7 +8,7 @@ import {
   getYear,
 } from "date-fns";
 import { useNavigate } from "react-router-dom";
-import { IClover } from "./timeline";
+import { IClover } from "./Timeline";
 import CloverActions from "./CloverActions";
 
 const Wrapper = styled.div<{ $isReply?: boolean }>`
@@ -129,8 +129,9 @@ export default function Clover({
     const diffMin = differenceInMinutes(now, date);
     const diffHour = differenceInHours(now, date);
 
-    if (diffMin < 60) return `${diffMin}분`;
-    if (diffHour < 24) return `${diffHour}시간`;
+    if (diffMin < 1) return "방금 전";
+    if (diffMin < 60) return `${diffMin}분 전`;
+    if (diffHour < 24) return `${diffHour}시간 전`;
 
     return getYear(now) === getYear(date)
       ? format(date, "MM월 dd일")

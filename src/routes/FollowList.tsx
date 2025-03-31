@@ -30,13 +30,7 @@ const Tab = styled(Link)<{ active: boolean }>`
   }
 `;
 
-const Title = styled.h2`
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 16px;
-`;
-
-export default function FollowListPage() {
+export default function FollowList() {
   const { type, username } = useParams<{ type: string; username: string }>();
   const [userList, setUserList] = useState<User[]>([]);
 
@@ -71,7 +65,6 @@ export default function FollowListPage() {
 
   return (
     <Wrapper>
-      <Title>{pageTitle} 목록</Title>
       <Tabs>
         <Tab
           to={`/profile/following/${username}`}
@@ -87,7 +80,6 @@ export default function FollowListPage() {
         </Tab>
       </Tabs>
 
-      {/* ✅ 컴포넌트 적용 */}
       <UserList users={userList} emptyText={pageTitle} />
     </Wrapper>
   );

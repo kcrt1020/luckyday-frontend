@@ -15,19 +15,19 @@ export const useNotificationToast = () => {
     const list: Notification[] = await fetchNotifications();
     if (!list || !Array.isArray(list)) return;
 
-    const newNotis = list.filter((n) => !knownIds.current.has(n.id));
+    const newNotis = list.filter((n) => !knownIds.current.has(n.id) && !n.read);
+
     if (newNotis.length === 0) return;
 
     newNotis.forEach((n) => knownIds.current.add(n.id));
 
-    // 새로운 알림들을 기존 알림 목록에 추가
     setToasts((prev) => [...prev, ...newNotis]);
 
     // 몇 초 후 자동으로 제거되게 설정
     newNotis.forEach((n) => {
       setTimeout(() => {
         setToasts((prev) => prev.filter((t) => t.id !== n.id));
-      }, 30000); // 알림 표시 시간 (30초)
+      }, 10000); // 알림 표시 시간 (10초)
     });
   };
 

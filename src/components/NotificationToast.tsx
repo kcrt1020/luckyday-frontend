@@ -2,6 +2,14 @@ import { useNavigate } from "react-router-dom";
 import { useNotificationToast } from "../hooks/useNotificationToast";
 import styled, { keyframes } from "styled-components";
 import { Notification } from "../utills/types";
+import {
+  parse,
+  format,
+  getYear,
+  differenceInMinutes,
+  differenceInHours,
+} from "date-fns";
+import { apiRequest } from "../utills/api";
 
 const slideIn = keyframes`
   from {
@@ -79,11 +87,10 @@ const CloseButton = styled.button`
 `;
 
 export default function NotificationToast() {
-  const { toasts, removeToast } = useNotificationToast(); // 배열로 받아옴
+  const { toasts, removeToast } = useNotificationToast();
   const navigate = useNavigate();
 
   const formatNotification = (noti: Notification): string => {
-    console.log(noti.sender);
     const name = noti.sender?.profile?.nickname;
     switch (noti.type) {
       case "LIKE":
@@ -97,18 +104,47 @@ export default function NotificationToast() {
     }
   };
 
-  const handleClick = (noti: Notification) => {
-    navigate(noti.url);
+  const handleClick = async (url: string, id: number) => {
+    try {
+      await apiRequest(`/api/notifications/${id}/read`, { method: "PATCH" });
+      navigate(url);
+    } catch (err) {
+      console.error("알림 읽음 처리 실패", err);
+    }
+  };
+
+  const formatTime = (createdAt: string) => {
+    const sanitized = createdAt
+      .replace(" ", "T")
+      .replace(/(\.\d{3})\d+$/, "$1");
+    const date = parse(sanitized, "yyyy-MM-dd'T'HH:mm:ss.SSS", new Date());
+
+    if (isNaN(date.getTime())) return "알 수 없음";
+
+    const now = new Date();
+    const diffMin = differenceInMinutes(now, date);
+    const diffHour = differenceInHours(now, date);
+
+    if (diffMin < 1) return "방금 전";
+    if (diffMin < 60) return `${diffMin}분 전`;
+    if (diffHour < 24) return `${diffHour}시간 전`;
+
+    return getYear(now) === getYear(date)
+      ? format(date, "MM월 dd일")
+      : format(date, "yyyy년 MM월 dd일");
   };
 
   return (
     <ToastContainer>
       {toasts.map((noti) => (
-        <ToastWrapper key={noti.id} onClick={() => handleClick(noti)}>
+        <ToastWrapper
+          key={noti.id}
+          onClick={() => handleClick(noti.url, noti.id)}
+        >
           <IconBox>🔔</IconBox>
           <TextBox>
             <Title>{formatNotification(noti)}</Title>
-            <Sub>방금 전</Sub>
+            <Sub>{formatTime(noti.createdAt)}</Sub>
           </TextBox>
           <CloseButton
             onClick={(e) => {

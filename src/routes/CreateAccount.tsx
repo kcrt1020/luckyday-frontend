@@ -7,7 +7,7 @@ import {
   Switcher,
   Title,
   Wrapper,
-} from "../components/auth-components";
+} from "../components/AuthComponents";
 
 export default function CreateAccount() {
   const navigate = useNavigate();

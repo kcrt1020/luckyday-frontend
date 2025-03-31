@@ -1,7 +1,7 @@
 import styled from "styled-components";
-import { IProfile } from "../routes/profile";
+import { IProfile } from "../routes/Profile";
 import FollowButton from "./FollowButton";
-import Timeline from "./timeline";
+import Timeline from "./Timeline";
 
 interface ViewProfileProps {
   profile: IProfile;

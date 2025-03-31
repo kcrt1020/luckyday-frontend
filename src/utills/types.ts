@@ -27,7 +27,7 @@ export interface Notification {
   type: NotificationType;
   targetId: number;
   url: string;
-  isRead: boolean;
+  read: boolean;
   createdAt: string;
   sender: NotificationSender;
 }
