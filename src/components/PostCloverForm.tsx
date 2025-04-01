@@ -132,7 +132,7 @@ export default function PostCloverForm() {
         maxLength={180}
         onChange={onChange}
         value={clover}
-        placeholder="무슨 일이야?"
+        placeholder="오늘의 클로버를 남겨보세요"
         required
       />
       <AttachFileButton htmlFor="file">
