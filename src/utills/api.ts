@@ -27,8 +27,8 @@ export const apiRequest = async (
   // console.log("🔍 API 요청 헤더:", headers);
 
   try {
-    // let response = await fetch(`${API_URL}${url}`, { ...options, headers });
-    let response = await fetch(`${url}`, { ...options, headers });
+    let response = await fetch(`${API_URL}${url}`, { ...options, headers });
+    // let response = await fetch(`${url}`, { ...options, headers });
 
     // console.log("🔍 응답 상태 코드:", response.status);
 
